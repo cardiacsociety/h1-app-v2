@@ -1,6 +1,6 @@
 <template>
     <v-form>
-        <app-overlay v-if="overlay">Authenticating...</app-overlay>
+        <app-overlay v-if="overlay || 1">Authenticating...</app-overlay>
         <div v-if="!token">
             <v-card color="grey lighten-4" flat>
                 <v-card-title>
@@ -37,6 +37,8 @@
 
 <script>
   import Overlay from '../Overlay.vue'
+  import EventBus from '../../main'
+  import api from '../../api/mapp'
 
   export default {
     components: {
@@ -68,28 +70,21 @@
     methods: {
       submit() {
         this.overlay = true
-        this.$http.post('auth/member', this.auth)
-          .then(r => {
-            this.message = r.body.message
-            this.token = r.body.data.token
+
+        api.auth(this.auth.login, this.auth.password)
+          .then((t) => {
+            this.$localStorage.set('appToken', t)
             this.overlay = false
-
-            // token
-            console.log('Setting appToken after login...')
-            this.$localStorage.set('appToken', this.token)
-
-            // redirect
             this.$router.push({name: this.redirect})
-
-            console.log(r)
-
-          }, r => {
-            // error callback
-            this.message = r.body.message
-            this.overlay = false
-            console.log(r)
+          })
+          .catch(() => {
+            this.message = "Auth error"
           })
       }
+    },
+
+    mounted() {
+      this.navEvent('close')
     }
   }
 </script>

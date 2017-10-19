@@ -10,6 +10,7 @@ import Tools from './components/tools/Tools.vue'
 import Resources from './components/resources/Resources.vue'
 import Setup from './components/setup/Setup.vue'
 import Help from './components/help/Help.vue'
+import Test from './components/test/Test.vue'
 import NotFound from './components/NotFound.vue'
 
 // // Lazy loading... webpack will create separate bundles for each of these routes...
@@ -61,6 +62,9 @@ export const routes = [
   {path: '/resources', name: 'resources', component: Resources, auth: true, meta: {title: "Resource Library"}},
   {path: '/setup', name: 'setup', component: Setup, meta: {title: "Setup"}},
   {path: '/help', name: 'help', component: Help, meta: {title: "Help"}},
+
+  // Test page
+  {path: '/test', name: 'test', component: Test, meta: {title: "Test"}},
 
   // catch-all
   //{path: '*', redirect: '/'}

@@ -63,7 +63,12 @@
       store() {
         this.$localStorage.set('appActivities', JSON.stringify(this.activities))
       }
+    },
+
+    mounted() {
+      this.navEvent('close')
     }
+
   }
 </script>
 

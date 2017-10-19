@@ -1,114 +1,207 @@
 <template>
-    <div>
-        <app-overlay v-if="overlay"></app-overlay>
+    <v-dialog v-model="dialog" persistent max-width="500px">
+        <v-btn
+                class="open"
+                color="blue darken-1" flat
+                slot="activator"
+                @click.native="openResource(url)">
+            {{ url }}
+        </v-btn>
+        <v-card>
+            <v-card-text>
+                <v-container grid-list-md>
+                    <v-layout wrap>
 
-        <form novalidate @submit.stop.prevent="submit">
+                        <v-flex xs6>
+                            <h4>Activity</h4>
+                        </v-flex>
 
-            <md-input-container>
-                <label>Activity Date [datepicker]</label>
-                <md-input v-model="activity.date"></md-input>
-            </md-input-container>
+                        <v-flex xs6 class="text-xs-right">
+                            <v-btn class="mr-0" :color="timerColour + ' darken-1'" flat
+                                   @click.native="toggleTimer()"
+                            >
+                                {{ timeSeconds | timerDisplay }}
+                                <v-icon>
+                                    {{ timerIcon }}
+                                </v-icon>
+                            </v-btn>
+                        </v-flex>
 
-            <div class="field-group">
-                <md-input-container>
-                    <label for="type">Activity Type</label>
-                    <md-select
-                            name="activityType"
-                            id="type"
-                            v-model="activity.typeId"
-                            v-on:change="updateQuantityUnit(activity.typeId)"
-                    >
-                        <md-option
-                                v-for="type in activityTypes"
-                                v-bind:value="type.id"
-                                key="type.id"
-                        >{{ type.name }}
-                        </md-option>
-                    </md-select>
-                </md-input-container>
-            </div>
+                        <v-flex xs12 sm6>
+                            <app-form-date-field></app-form-date-field>
+                        </v-flex>
 
-            <md-input-container>
-                <label>Activity Description</label>
-                <md-textarea v-model="activity.description"></md-textarea>
-            </md-input-container>
+                        <v-flex xs12 sm6>
+                            <v-text-field
+                                    label="Quantity (hrs)"
+                                    required
+                                    prepend-icon="timer"
+                                    v-on:focus="waitForUserInput"
+                                    v-model="timeHours"
+                            ></v-text-field>
+                        </v-flex>
 
-            <md-input-container>
-                <label>Quantity ({{ quantityUnit }})</label>
-                <md-input type="number"></md-input>
-            </md-input-container>
+                        <v-flex xs12>
+                            <v-select
+                                    label="Activity Type"
+                                    :items="activityTypes"
+                                    v-model="activityTypeSelected"
+                                    item-text="name"
+                                    item-value="id"
+                                    return-object
+                            ></v-select>
+                        </v-flex>
 
-        </form>
-
-        <div>
-            <p>activity object</p>
-            <p>{{ activity }}</p>
-        </div>
-
-    </div>
+                        <v-flex xs12>
+                            <v-text-field
+                                    label="Description"
+                                    multi-line
+                                    rows="3"
+                                    required
+                                    :value="description"
+                            ></v-text-field>
+                        </v-flex>
+                        <v-flex xs12 sm6>
+                            <v-select
+                                    label="Rating"
+                                    :items="['Excellent', 'Good', 'Average', 'Poor']"
+                            ></v-select>
+                        </v-flex>
+                        <v-flex xs12 sm6>
+                            <v-select
+                                    label="Suggest"
+                                    :items="['Keep', 'Review', 'Update', 'Remove']"
+                            ></v-select>
+                        </v-flex>
+                    </v-layout>
+                </v-container>
+            </v-card-text>
+            <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn color="blue darken-1" flat @click.native="dialog = false">Close</v-btn>
+                <v-btn color="blue darken-1" flat @click.native="dialog = false">Save</v-btn>
+            </v-card-actions>
+        </v-card>
+    </v-dialog>
 </template>
 
 <script>
+  import moment from 'moment'
   import Overlay from '../Overlay.vue'
+  import DateField from '../form/DateField.vue'
 
   export default {
+    props: ['activityTypes', 'description', 'url'],
 
     components: {
-      appOverlay: Overlay
+      appFormDateField: DateField
     },
 
     data() {
       return {
-        overlay: false,
-        activityTypes: [],
-        activity: {
-          date: '',
-          typeId: 0,
-          description: '',
-          unit: '',
+        dialog: false,
+        timeSeconds: 0,
+        timerRunning: false,
+        intervalId: null,
+        computeHours: true,
+        lastComputedHours: null,
+
+        // can I set to a props value?
+        activityTypeSelected: null
+      }
+    },
+
+    computed: {
+      timerColour() {
+        if (this.timerRunning) {
+          return 'green'
+        }
+        return 'red'
+      },
+      timerIcon() {
+        if (this.timerRunning) {
+          return 'pause'
+        }
+        return 'play_arrow'
+      },
+
+      timeHours: {
+        // getter
+        get() {
+          // only compute the value if the timer is running
+          if (this.computeHours) {
+            return (this.timeSeconds / 3600).toFixed(2)
+          }
+          return this.lastComputedHours
         },
-        quantityUnit: '',
+        // setter
+        set(hours) {
+          this.timeSeconds = hours * 3600
+        }
+      }
+    },
+
+    methods: {
+
+      openResource(url) {
+        window.open(url)
+        this.startTimer()
+      },
+
+      startTimer() {
+        this.timerRunning = true
+        this.IntervalId = setInterval(() => {
+          this.timeSeconds++
+        }, 1000)
+      },
+
+      stopTimer() {
+        this.timerRunning = false
+        clearInterval(this.IntervalId)
+      },
+
+      toggleTimer() {
+        if (this.timerRunning) {
+          this.stopTimer()
+        } else {
+          this.startTimer()
+        }
+      },
+
+      // This function stops the timer, and prevents
+      // the computed 'timeHours' from updating
+      waitForUserInput() {
+        this.stopTimer()
+        this.lastComputedHours = this.timeHours
+        this.computeHours = false
+      },
+    },
+
+    filters: {
+      timerDisplay(seconds) {
+
+        // by default moment.js will return the string "invalid date" if seconds
+        // is not a valid number. As we aren't really inputting date, it is a time
+        // catch this first and return our own message. Note this appears on the timer
+        // itself in place of 'hh:mm:ss' so it should be short and sweet.
+        if (isNaN(seconds) || seconds < 0) {
+          return "invalid time"
+        }
+
+        return moment.utc(seconds * 1000).format('HH:mm:ss')
       }
     },
 
     mounted() {
-      this.fetchActivityTypes()
-    },
-
-    methods: {
-      fetchActivityTypes() {
-        this.overlay = true
-        this.$http.get('g/activities')
-          .then(r => {
-            r.body.data.forEach(e => {
-              this.activityTypes.push({
-                id: e.id,
-                name: e.name,
-                unit: e.credit.unitName
-              })
-            })
-            console.log(r)
-            //this.store()
-            this.overlay = false
-          }, r => {
-            console.log(r)
-            this.overlay = false
-            // middleware will force login
-          })
-      },
-
-      // Display the correct unit by finding the activity type id in the array of activityTypes
-      updateQuantityUnit(activityTypeId) {
-        this.activityTypes.forEach((elem) => {
-          if (elem.id === activityTypeId) {
-            this.quantityUnit = elem.unit
-          }
-        })
-      }
+      this.activityTypeSelected = this.activityTypes[1]
     }
+
   }
 </script>
 
-<style>
-
+<style scoped>
+    .open {
+        text-transform: lowercase;
+        margin-left: 0;
+    }
 </style>

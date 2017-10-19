@@ -10,8 +10,13 @@
     import Form from './Form.vue'
 
     export default {
+
       components: {
         appForm: Form
+      },
+
+      mounted() {
+        this.navEvent('close')
       }
     }
 </script>

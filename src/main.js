@@ -2,6 +2,7 @@ import Config from './config/config'
 console.log("Config -------")
 console.log(Config)
 console.log('--------------')
+
 import Vue from 'vue'
 import VueResource from 'vue-resource'
 import VueRouter from 'vue-router'
@@ -15,7 +16,6 @@ import InstantSearch from 'vue-instantsearch'
 import App from './App.vue'
 
 // Material Style...
-// Vue.use(VueMaterial)
 Vue.use(Vuetify)
 
 // Local storage for token

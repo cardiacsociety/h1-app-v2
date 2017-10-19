@@ -19,13 +19,11 @@
             <v-list>
                 <app-nav-drawer-link
                         icon="library_add"
-                        @click="closeDrawer()"
                         :to="{name: 'activitiesAdd'}"
                 >Add a new activity
                 </app-nav-drawer-link>
                 <app-nav-drawer-link
                         icon="history"
-                        @click="closeDrawer()"
                         :to="{name: 'activitiesList'}"
                 >View a list of past activities
                 </app-nav-drawer-link>
@@ -50,6 +48,10 @@
             progress: 55
         }
       },
+
+      mounted() {
+        this.navEvent('close')
+      }
     }
 </script>
 

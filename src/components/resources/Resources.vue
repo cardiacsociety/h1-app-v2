@@ -21,10 +21,11 @@
                             </app-resource-description>
                         </span>
                         <div>
-                            <app-timer-form
+                            <app-activity-form
+                                    :activityTypes="activityTypes"
                                     :description="result.name"
                                     :url="result.shortUrl"
-                            ></app-timer-form>
+                            ></app-activity-form>
                             <v-divider></v-divider>
                         </div>
                     </div>
@@ -37,20 +38,30 @@
 <script>
   import Config from '../../config/config'
   import {EventBus} from '../../main'
+  import api from '../../api/mapp'
+
   import ResourceDescription from './ResourceDescription.vue'
-  import TimerForm from '../activities/TimerForm.vue'
+  import Form from '../activities/Form.vue'
 
   export default {
 
     components: {
       appResourceDescription: ResourceDescription,
-      appTimerForm: TimerForm
+      appActivityForm: Form
     },
 
     data() {
       return {
         Config,
         expand: false
+      }
+    },
+
+    computed: {
+      // list of activity types get passed to form as props, otherwise the api
+      // call is made for every resource item displayed
+      activityTypes() {
+        return api.getActivityTypes()
       }
     },
 
