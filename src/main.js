@@ -44,20 +44,20 @@ Vue.http.interceptors.push((request, next) => {
 
   next(response => {
 
-    if (response.body.status === 400) {
-      alert('Bad auth request')
-      this.$router.push({name: 'activitiesAdd'})
-    }
+    // if (response.body.status === 400) {
+    //   alert('Bad auth request')
+    //   this.$router.push({name: 'activitiesAdd'})
+    // }
 
-    if (response.body.status === 401) {
-      alert('Unauthorized')
-      this.$router.push({name: 'activitiesAdd'})
-    }
+    // if (response.body.status === 401) {
+    //   alert('Unauthorized')
+    //   this.$router.push({name: 'activitiesAdd'})
+    // }
 
-    if (response.body.token) {
-      console.log('Fresh token in response... updating appToken in local storage')
-      Vue.localStorage.set('appToken', response.body.token)
-    }
+    // if (response.body.token) {
+    //   console.log('Fresh token in response... updating appToken in local storage')
+    //   Vue.localStorage.set('appToken', response.body.token)
+    // }
   })
 })
 
@@ -110,6 +110,7 @@ Vue.mixin({
       return Vue.localStorage.get('appToken')
     }
   },
+
   methods: {
 
     // checkAuth and 'redirect' (route name)

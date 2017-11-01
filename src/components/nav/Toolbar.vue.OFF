@@ -78,7 +78,14 @@
 </template>
 
 <script>
+  import Session from '../auth/Session.vue'
+  
   export default {
+    
+    components: {
+      
+    },
+    
     methods: {
       toggleNav() {
         this.$refs.sideNav.toggle()

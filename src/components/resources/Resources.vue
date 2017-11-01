@@ -53,22 +53,27 @@
     data() {
       return {
         Config,
-        expand: false
-      }
-    },
+        expand: false,
 
-    computed: {
-      // list of activity types get passed to form as props, otherwise the api
-      // call is made for every resource item displayed
-      activityTypes() {
-        return api.getActivityTypes()
+        // list of activity types get passed to form as props. Had as computed
+        // but was then called for every row and was returning empty, sometimes?
+        activityTypes: null
       }
     },
 
     methods: {
+
       emit(opt) {
         EventBus.$emit('navEvent', opt)
       },
+
+      fetchActivityTypes() {
+        this.activityTypes = api.getActivityTypes()
+      }
+    },
+
+    mounted() {
+      this.fetchActivityTypes()
     }
   }
 </script>

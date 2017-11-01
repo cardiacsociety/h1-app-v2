@@ -20,18 +20,15 @@ Vue.http.interceptors.push((request, next) => {
 
 export default {
 
-  // Auth return a promise for the token
+  // auth POSTs login to api, returns a promise
   auth(login, password) {
-
     const auth = {login, password} // post body
-
-    // return the promise, which returns the token :)
     return Vue.http.post('auth/member', auth)
-      .then(r => {
-        return r.body.data.token
-      }, () => {
-        return null
-      })
+  },
+
+  // refreshToken GETs a new token, returns a promise
+  refreshToken() {
+    return Vue.http.get('m/token')
   },
 
   getActivityTypes() {
@@ -47,7 +44,7 @@ export default {
             unit: e.credit.unitName
           })
         })
-        console.log(r)
+        console.log("API called to fetch activity types")
       }, r => {
         console.log(r)
       })

@@ -1,5 +1,6 @@
 <template>
     <div>
+        <app-session></app-session>
         <v-navigation-drawer v-model="drawer" app v-on:toggleDrawer="toggleDrawer">
             <v-toolbar class="deep-orange">
                 <!--provides space for top toolbar-->
@@ -83,19 +84,23 @@
             </v-btn>
             <v-toolbar-title v-text="title"></v-toolbar-title>
             <v-spacer></v-spacer>
-            <v-icon color="red">favorite</v-icon>
+            <v-icon :color="heartbeat.currentClr" @click="emitOpenSessionDialog">favorite</v-icon>
         </v-toolbar>
     </div>
 </template>
 
 <script>
+  import Session from '../auth/Session.vue'
   import NavDrawerLink from './NavDrawerLink.vue'
   import {EventBus} from '../../main'
 
   export default {
+
     components: {
+      appSession: Session,
       appNavDrawerLink: NavDrawerLink
     },
+
     data() {
       return {
         clipped: true,
@@ -122,7 +127,17 @@
               }
             ]
           }
-        ]
+        ],
+
+        // session heartbeat gimmick
+        heartbeat: {
+          intervalId: 0,
+          beating: false,
+          deadClr: "red lighten-4",
+          sysClr: "red darken-1",
+          diaClr: "red darken-3",
+          currentClr: "red lighten-4",
+        }
       }
     },
 
@@ -131,7 +146,8 @@
       // This sets the title in the toolbar based on the route meta (see routes.js)
       title() {
         return this.$route.meta.title
-      }
+      },
+
     },
 
     methods: {
@@ -143,6 +159,24 @@
       },
       openDrawer() {
         this.drawer = true
+      },
+
+      heartBeatOn() {
+        this.heartbeat.intervalId = setInterval(() => {
+            this.heartbeat.currentClr = this.heartbeat.sysClr
+          setTimeout(()=>{
+            this.heartbeat.currentClr = this.heartbeat.diaClr
+          }, 300)
+        }, 1400)
+      },
+
+      heartBeatStop() {
+        clearInterval(this.heartbeat.intervalId)
+        this.heartbeat.currentClr = this.heartbeat.deadClr
+      },
+
+      emitOpenSessionDialog() {
+        EventBus.$emit('openSessionDialog')
       }
     },
 
@@ -158,6 +192,18 @@
           this.toggleDrawer()
         }
 
+      })
+
+      // Listen for session heartbeat event.
+      // Clear the interval first to avoid fibrillation :)
+      EventBus.$on('heartbeat', () => {
+        clearInterval(this.heartbeat.intervalId)
+        this.heartBeatOn()
+      })
+
+      // Listen for heartbeat STOP
+      EventBus.$on('heartbeatStop', () => {
+        this.heartBeatStop()
       })
     }
   }

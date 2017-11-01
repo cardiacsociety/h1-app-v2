@@ -1,6 +1,9 @@
 <template>
     <v-form>
-        <app-overlay v-if="overlay || 1">Authenticating...</app-overlay>
+        <app-overlay v-if="overlay">Authenticating...</app-overlay>
+        <v-alert color="error" icon="warning" v-model="errorAlert" dismissible>
+            Auth Error: {{ errorMessage }}
+        </v-alert>
         <div v-if="!token">
             <v-card color="grey lighten-4" flat>
                 <v-card-title>
@@ -18,6 +21,9 @@
                                 <v-text-field
                                         label="Password"
                                         v-model="auth.password"
+                                        :append-icon="maskPassword ? 'visibility_off' : 'visibility'"
+                                        :append-icon-cb="() => (maskPassword = !maskPassword)"
+                                        :type="maskPassword ? 'password' : 'text'"
                                         required
                                 ></v-text-field>
                                 <v-btn class="" v-on:click="submit">login</v-btn>
@@ -28,16 +34,14 @@
             </v-card>
         </div>
         <div v-else>
-            <p>Store this token in local storage and then redirect to root...</p>
-            <p>{{ token }}</p>
-            <md-button class="md-raised md-primary" v-on:click="token = null">log out</md-button>
+            <p>Already logged in</p>
         </div>
     </v-form>
 </template>
 
 <script>
   import Overlay from '../Overlay.vue'
-  import EventBus from '../../main'
+  import { EventBus } from '../../main'
   import api from '../../api/mapp'
 
   export default {
@@ -53,10 +57,12 @@
           login: '',
           password: ''
         },
-
+        maskPassword: true,
         overlay: false,
         message: null,
         token: null,
+        errorAlert: false,
+        errorMessage: null
       }
     },
 
@@ -72,15 +78,29 @@
         this.overlay = true
 
         api.auth(this.auth.login, this.auth.password)
-          .then((t) => {
-            this.$localStorage.set('appToken', t)
+          .then((r) => {
             this.overlay = false
+            this.$localStorage.set('appToken', r.body.data.token)
+            EventBus.$emit('login')
             this.$router.push({name: this.redirect})
+          }, (r) => {
+            this.overlay = false
+            this.errorAlert = true
+            this.errorMessage = this.sensibleErrorMessage(r)
           })
-          .catch(() => {
-            this.message = "Auth error"
-          })
-      }
+      },
+
+      // Format auth error, handle the 'no response' case nicely
+      sensibleErrorMessage(r) {
+        // No response from api
+        if (r.status === 0) {
+          return "No response from authentication service"
+        // response
+        } else {
+          return this.errorMessage = r.status + ' - ' + r.statusText
+        }
+      },
+
     },
 
     mounted() {

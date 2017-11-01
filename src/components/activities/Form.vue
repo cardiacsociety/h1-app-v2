@@ -91,7 +91,19 @@
   import DateField from '../form/DateField.vue'
 
   export default {
-    props: ['activityTypes', 'description', 'url'],
+    props: {
+      activityTypes: {
+        type: Array,
+        required: true
+      },
+      description: {
+        type: String
+      },
+      url: {
+        type: String,
+        required: true
+      }
+    },
 
     components: {
       appFormDateField: DateField
@@ -107,7 +119,8 @@
         lastComputedHours: null,
 
         // can I set to a props value?
-        activityTypeSelected: null
+        activityTypeSelected: null,
+
       }
     },
 
