@@ -13,7 +13,7 @@
 
 <script>
     export default {
-      props: ['to', 'icon', 'title']
+      props: ['to', 'icon', 'title'],
     }
 </script>
 

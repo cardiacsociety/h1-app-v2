@@ -69,7 +69,7 @@
 
                 <app-nav-drawer-link
                         icon="exit_to_app"
-                        :to="{name: 'logout'}"
+                        :to="{name: 'logout', query: {from: currentPath}}"
                 >Logout
                 </app-nav-drawer-link>
 
@@ -84,7 +84,7 @@
             </v-btn>
             <v-toolbar-title v-text="title"></v-toolbar-title>
             <v-spacer></v-spacer>
-            <v-icon :color="heartbeat.currentClr" @click="emitOpenSessionDialog">favorite</v-icon>
+            <v-icon class="session-monitor" :color="heartbeat.currentClr" @click="emitOpenSessionDialog">favorite</v-icon>
         </v-toolbar>
     </div>
 </template>
@@ -148,6 +148,11 @@
         return this.$route.meta.title
       },
 
+      // returns the current url for returning from a cancelled action
+      currentPath() {
+        return this.$route.path
+      }
+
     },
 
     methods: {
@@ -210,6 +215,8 @@
 </script>
 
 
-<style>
-
+<style scoped>
+    .session-monitor:hover {
+        cursor: pointer;
+    }
 </style>

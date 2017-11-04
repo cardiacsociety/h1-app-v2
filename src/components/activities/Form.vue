@@ -28,7 +28,7 @@
                         </v-flex>
 
                         <v-flex xs12 sm6>
-                            <app-form-date-field></app-form-date-field>
+                            <app-form-date-field v-model="activity.date"></app-form-date-field>
                         </v-flex>
 
                         <v-flex xs12 sm6>
@@ -79,8 +79,9 @@
             <v-card-actions>
                 <v-spacer></v-spacer>
                 <v-btn color="blue darken-1" flat @click.native="dialog = false">Close</v-btn>
-                <v-btn color="blue darken-1" flat @click.native="dialog = false">Save</v-btn>
+                <v-btn color="blue darken-1" dark @click.native="saveActivity">Save</v-btn>
             </v-card-actions>
+            {{ activity }}
         </v-card>
     </v-dialog>
 </template>
@@ -89,6 +90,7 @@
   import moment from 'moment'
   import Overlay from '../Overlay.vue'
   import DateField from '../form/DateField.vue'
+  import api from '../../api/mapp'
 
   export default {
     props: {
@@ -118,9 +120,7 @@
         computeHours: true,
         lastComputedHours: null,
 
-        // can I set to a props value?
         activityTypeSelected: null,
-
       }
     },
 
@@ -150,6 +150,13 @@
         // setter
         set(hours) {
           this.timeSeconds = hours * 3600
+        }
+      },
+
+      // computed object that will be passed in the api call
+      activity() {
+        return {
+          quantity: this.timeHours,
         }
       }
     },
@@ -188,6 +195,16 @@
         this.lastComputedHours = this.timeHours
         this.computeHours = false
       },
+
+      // Save the activity
+      saveActivity() {
+        // set the quantity, the other activity fields are set directly from the form
+        this.activity.typeId = this.activityTypeSelected.typeId
+        this.activity.description = ""
+        this.activity.quantity = this.timeHours
+        this.activity.date = ""
+      }
+
     },
 
     filters: {

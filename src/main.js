@@ -20,8 +20,6 @@ Vue.use(Vuetify)
 
 // Local storage for token
 Vue.use(VueLocalStorage)
-//const appToken = Vue.localStorage.get('appToken', 'pretentdtoken') // second arg is fallback value
-//console.log(appToken)
 
 // Algolia
 Vue.use(InstantSearch)
@@ -31,18 +29,18 @@ Vue.use(VueResource);
 Vue.http.options.root = Config.API_BASE_URL
 
 // interceptors (middleware)
-Vue.http.interceptors.push((request, next) => {
+//Vue.http.interceptors.push((request, next) => {
 
   // Add JWT to all requests, if not required, eg for auth, then an empty string will be ok
-  console.log('Add token from local storage to every request...')
-  request.headers.set('Authorization', 'Bearer ' + Vue.localStorage.get('appToken'))
+  // console.log('Add token from local storage to every request...')
+  // request.headers.set('Authorization', 'Bearer ' + Vue.localStorage.get('appToken'))
 
   // code to deal with request here... but just want to get the fresh token, if it exists!
   // access the response in the next() function
   // check if the route requires auth...
-  console.log(request)
+  // console.log(request)
 
-  next(response => {
+ // next(response => {
 
     // if (response.body.status === 400) {
     //   alert('Bad auth request')
@@ -58,8 +56,8 @@ Vue.http.interceptors.push((request, next) => {
     //   console.log('Fresh token in response... updating appToken in local storage')
     //   Vue.localStorage.set('appToken', response.body.token)
     // }
-  })
-})
+  //})
+//})
 
 // Router
 Vue.use(VueRouter)

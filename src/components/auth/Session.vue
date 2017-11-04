@@ -2,7 +2,7 @@
     <v-dialog v-model="sessionDialog">
         <v-card>
             <v-card-title>
-                <span><h5>Session</h5></span>
+                <span><h5>Session Monitor</h5></span>
                 <v-spacer></v-spacer>
             </v-card-title>
             <v-card-text>
@@ -16,7 +16,7 @@
                 </div>
             </v-card-text>
             <v-card-actions>
-                <v-btn v-if="session" @click.stop="refreshToken">force refresh</v-btn>
+                <v-btn v-if="session" @click="refreshToken">refresh</v-btn>
                 <v-btn v-if="!session" @click.stop="login">login</v-btn>
                 <v-btn color="primary" flat @click.stop="sessionDialog=false">Close</v-btn>
             </v-card-actions>
@@ -35,22 +35,17 @@
       return {
 
         // token data
-        // The token stored in local storage
-        token: null,
-        // the decoded token, for convenience
-        decoded: {},
-        // the time to live in minutes
-        ttl: null,
+        lsTokenKey: 'appToken', // local storage token key name
+        token: null,    // token
+        decoded: {},    // convenience
+        ttl: null,      // minutes
+        //valid: false,   // valid and future exp
 
-        // refresh token when TTL drops to this number
-        refreshTTL: 60,
+        refreshTTL: 60, // refresh when TTL = x mins
+        refreshCheckInterval: 1, // validate token every x mins
 
-        // refreshCheckInterval in minutes
-        refreshCheckInterval: 0.1,
-
-        // just used to signal a state change for this component
-        // and force computed value update
-        refresh: false,
+        // set / unset periodic check interval
+        checkIntervalId: 0,
 
         // testing
         sessionDialog: false
@@ -62,7 +57,7 @@
       // For this to be true we need a valid token with exp > now,
       // ie, ttl > 0 will do the job
       session() {
-        if (this.ttl > 0) {
+        if (this.token) {
           EventBus.$emit('heartbeat')
           return true
         }
@@ -74,33 +69,52 @@
 
     methods: {
 
-      // set token data
-      setTokenData() {
+      // validate the token, and set token data values.
+      // t - a token to validate
+      // ls - local storage key name for the token to validate
+      // If both args are supplied validateToken will check that the token in local storage
+      // matches t.
+      validateToken(t, ls) {
 
-        // Make sure we have the token in local storage
-        this.token = this.$localStorage.get("appToken")
-        if (this.tokenValid()) {
-          this.decoded = jwtDecode(this.token)
-          this.ttl = this.calcTTL()
-        } else {
-          this.token = null
-          this.decoded = {}
-          this.ttl = null
+        if (!t && !ls) {
+          console.log("validateToken() - no args supplied, need a token and / or a local storage key name")
+          return false
         }
-      },
 
-      // checks that a token looks ok, does not validate expiry or anything else
-      tokenValid() {
+        if (ls) {
+          this.token = this.$localStorage.get("appToken")
+          // matches t?
+          if (t) {
+            if (this.token != t) {
+              console.log("validateToken() - supplied token argument does not match the token in local storage")
+              return false
+            }
+          }
+        }
+
+        if (t) {
+          this.token = t
+        }
+
+        // decode the token
         try {
           this.decoded = jwtDecode(this.token)
-          if (this.decoded) {
-            return true
-          }
+          console.log("validateToken() - decoded", this.decoded)
+        }
+        catch(e) {
+          console.log("validateToken() - could not decode", e)
           return false
         }
-        catch (e) {
-          return false
+
+        this.ttl = this.calcTTL()
+        if (this.ttl > 0) {
+          console.log("validateToken() - ttl", this.ttl + " minutes")
+          return true
         }
+
+        // expired
+        console.log("validateToken() - token has expired")
+        return false
       },
 
       // calculate the time to live in minutes
@@ -112,14 +126,83 @@
       },
 
       refreshToken() {
-        api.refreshToken()
-          .then((r) => {
-            this.$localStorage.set("appToken", r.body.token)
-            this.setTokenData()
-          }, (r) => {
-            console.log("Could not refresh token... leaving current token in local storage")
-            console.log(r)
-          })
+        // Only fresh is current token is valid, as we need a valid token to pass in Auth header
+        let ok = false
+        if (this.validateToken(this.token, this.lsTokenKey)) {
+          console.log("refreshToken()", "token is valid")
+          api.refreshToken()
+            .then((r) => {
+              this.$localStorage.set("appToken", r.body.token)
+              // run validateToken again to set values for the new token
+              ok = this.validateToken(this.token, this.lsTokenKey)
+
+            }, (r) => {
+              // If the local storage token is tampered with then we end up here
+              // with a 401 (unauthorized). This will never resolve because the token refresh
+              // requires a valid token to work. So on 401 we should bail out.
+              let msg = "Attempt to renew token got a response of " + r.status + " - " + r.statusText
+              if (r.status === 401) {
+                console.log(r)
+                console.log(msg)
+                console.log("Will stop trying")
+                this.clearAll()
+              }
+            })
+
+        } else {
+          // could not validate the token
+          this.clearAll()
+          this.stopIntervalCheck()
+        }
+      },
+
+      // remove all traces of the token
+      clearToken() {
+        this.$localStorage.remove("appToken")
+        this.token = null
+        this.decoded = {}
+        this.ttl = null
+      },
+
+      startIntervalCheck() {
+
+        // Make sure no interval is already running
+        this.stopIntervalCheck()
+
+        // Initial call to validateToken() sets local data and returns bool
+        if (this.validateToken('', this.lsTokenKey)) {
+          console.log("Token is valid, starting interval...")
+          this.checkIntervalId = setInterval(() => {
+            // validate on each run in case token is changed in local storage
+            if (this.validateToken(this.token, this.lsTokenKey)) {
+              console.log("TTL is " + this.ttl + " refresh ttl is " + this.refreshTTL)
+              if (this.ttl < this.refreshTTL) {
+                console.log(" - time to refresh!")
+                // need a bool here?
+                this.refreshToken()
+              } else {
+                console.log(" - token is ok")
+              }
+            } else {
+              console.log("Invalid token - stop interval and clear token data")
+              this.clearAll()
+            }
+          }, (this.refreshCheckInterval * 60 * 1000))
+
+        } else {
+          console.log("Invalid token - stop interval and clear token data")
+          this.clearAll()
+        }
+      },
+
+      stopIntervalCheck() {
+        clearInterval(this.checkIntervalId)
+      },
+
+      // clears the interval and all the token data
+      clearAll() {
+        this.stopIntervalCheck()
+        this.clearToken()
       },
 
       // go to login page
@@ -136,11 +219,13 @@
           return s.substring(s.length - 20)
         }
       },
+
       roundMinutes(m) {
         if (m) {
           return m.toFixed(2)
         }
       }
+
     },
 
     mounted() {
@@ -148,35 +233,17 @@
       // components have been rendered
       this.$nextTick(() => {
 
-        // Set the token data initially, ie a page refresh, and then set up periodic checks
-        this.setTokenData()
-        setInterval(() => {
+        this.startIntervalCheck()
 
-          // reset token data on each interval
-          this.setTokenData()
-
-          // need a current token for Auth header, to refresh
-          if (this.token) {
-            if (this.ttl < this.refreshTTL) {
-              console.log("Time to refresh!")
-              this.refreshToken()
-            }
-          }
-        }, (this.refreshCheckInterval * 60 * 1000))
-
-
-        // Listen for relevant events
-
-        // successful login
+        // Listen for succesful login event
         EventBus.$on('login', () => {
-          this.refresh = true
+          this.startIntervalCheck()
         })
 
-        // open the session dialog
+        // Listen for request to open the session dialog
         EventBus.$on('openSessionDialog', () => {
           this.sessionDialog = true
         })
-
       })
     }
   }

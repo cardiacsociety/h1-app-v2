@@ -8,12 +8,10 @@ Vue.http.options.root = Config.API_BASE_URL
 import VueLocalStorage from 'vue-localstorage'
 Vue.use(VueLocalStorage)
 
-let jwt = Vue.localStorage.get('appToken')
-
 // interceptors (middleware)
 Vue.http.interceptors.push((request, next) => {
   // Add JWT to all requests, if not required, eg for auth, then an empty string will be ok
-  request.headers.set('Authorization', 'Bearer ' + jwt)
+  request.headers.set('Authorization', 'Bearer ' + Vue.localStorage.get('appToken'))
   next()
 })
 
@@ -31,6 +29,7 @@ export default {
     return Vue.http.get('m/token')
   },
 
+  // get a list of activity TYPES
   getActivityTypes() {
 
     let activityTypes = []
@@ -50,7 +49,40 @@ export default {
       })
 
     return activityTypes
+  },
+
+
+  // Add a member activity record, activity is an object:
+  //  {
+  //    "activityId": 1, (the activity TYPE id)
+  //    "date": "2017-04-24",
+  //    "quantity": 1,
+  //    "description": "The description of the activity..."
+  //  }
+  addActivity(body) {
+
+    body = {
+      "activityId": 1,
+      "date": "2017-04-24",
+      "quantity": 1,
+      "description": "The description of the activity..."
+    }
+
+    console.log("POSTing new activity")
+    Vue.http.post('m/activities', body)
+      .then((r) => {
+        console.log("...done")
+        console.log(r)
+      }, (r) => {
+        console.log("...error")
+        console.log(r)
+      })
   }
+
+
+
+
+
 }
 
 
@@ -82,5 +114,9 @@ export default {
 //       this.overlay = false
 //     })
 // }
+
+
+
+
 
 
