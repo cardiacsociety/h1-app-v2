@@ -1,6 +1,5 @@
 <template>
     <div>
-        {{ checkAuth('activitiesIndex') }}
         <app-add-fab></app-add-fab>
         <h3>Activities Overview</h3>
         <div>
