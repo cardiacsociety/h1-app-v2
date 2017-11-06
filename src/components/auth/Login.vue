@@ -102,10 +102,6 @@
       },
 
     },
-
-    mounted() {
-      this.navEvent('close')
-    }
   }
 </script>
 

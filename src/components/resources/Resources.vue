@@ -1,7 +1,6 @@
 <template>
     <div>
         <h3>Resources</h3>
-        {{ checkAuth($route.name) }}
         <ais-index
                 :app-id="Config.ALGOLIA_APP_ID"
                 :api-key="Config.ALGOLIA_API_KEY"
@@ -62,11 +61,6 @@
     },
 
     methods: {
-
-      emit(opt) {
-        EventBus.$emit('navEvent', opt)
-      },
-
       fetchActivityTypes() {
         this.activityTypes = api.getActivityTypes()
       }

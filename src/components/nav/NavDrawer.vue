@@ -1,7 +1,11 @@
 <template>
     <div>
         <app-session></app-session>
-        <v-navigation-drawer v-model="drawer" app v-on:toggleDrawer="toggleDrawer">
+        <v-navigation-drawer
+                v-model="drawer"
+                app
+                disable-route-watcher
+        >
             <v-toolbar class="deep-orange">
                 <!--provides space for top toolbar-->
             </v-toolbar>
@@ -30,7 +34,6 @@
                     <v-list-tile v-for="subItem in item.items"
                                  v-bind:key="subItem.title"
                                  :to="subItem.to"
-                                 @click="navEvent('close')"
                                  :exact="subItem.exact"
                     >
                         <v-list-tile-content>
@@ -68,6 +71,7 @@
                 </app-nav-drawer-link>
 
                 <app-nav-drawer-link
+                        v-if="loggedIn"
                         icon="exit_to_app"
                         :to="{name: 'logout', query: {from: currentPath}}"
                 >Logout
@@ -151,18 +155,24 @@
       // returns the current url for returning from a cancelled action
       currentPath() {
         return this.$route.path
-      }
+      },
 
+      loggedIn() {
+        return Session.session
+      }
     },
 
     methods: {
       toggleDrawer() {
+        //console.log('toggleDrawer()')
         this.drawer = !this.drawer
       },
       closeDrawer() {
+        //console.log('closeDrawer()')
         this.drawer = false
       },
       openDrawer() {
+        //console.log('openDrawer()')
         this.drawer = true
       },
 
@@ -186,15 +196,19 @@
     },
 
     mounted() {
+
       EventBus.$on('navEvent', (opt) => {
         if (opt === 'close') {
           this.closeDrawer()
+          return
         }
         if (opt === 'open') {
           this.openDrawer()
+          return
         }
         if (opt === 'toggle') {
           this.toggleDrawer()
+          return
         }
 
       })

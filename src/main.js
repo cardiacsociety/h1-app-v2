@@ -13,7 +13,10 @@ import jwtDecode from 'jwt-decode'
 import {routes} from './routes'
 import InstantSearch from 'vue-instantsearch'
 
+import Token from './util/token'
+
 import App from './App.vue'
+
 
 // Material Style...
 Vue.use(Vuetify)
@@ -90,7 +93,6 @@ const router = new VueRouter({
 // //next({path Obj}) // a router-link object
 //})
 
-
 // Global EventBus
 export const EventBus = new Vue()
 
@@ -120,7 +122,7 @@ Vue.mixin({
 
       if (!this.appToken) {
         console.log('Will redirect to route name: ' + redirect)
-        this.$router.push(authRoute)
+        //this.$router.push(authRoute)
         return
       }
 
@@ -138,7 +140,7 @@ Vue.mixin({
       catch (e) {
         console.log('Bung token')
         console.log(e)
-        this.$router.push(authRoute)
+        //this.$router.push(authRoute)
         return
       }
 
@@ -147,7 +149,7 @@ Vue.mixin({
       const expiry = decoded.exp * 1000
       if (expiry <= now) {
         console.log('Expired token')
-        this.$router.push(authRoute)
+        //this.$router.push(authRoute)
         return
       }
 
@@ -159,10 +161,31 @@ Vue.mixin({
       if ( opt != 'close' && opt != 'open' && opt != 'toggle') {
         console.log("navEvent option must be one of: 'close', 'open', 'toggle' ")
       }
+
+      console.log("Emitting nav event", opt)
       EventBus.$emit('navEvent', opt)
     }
   }
 })
+
+
+//Check for valid token
+router.beforeEach((to, from, next) => {
+  // Continue if we have a valid session, or we are heading to the login page
+  if (Token.validate(Vue.localStorage.get('appToken')) || to.name === 'login') {
+    next()
+  } else {
+    next({path: '/login', query: {to: to.path}})
+  }
+})
+
+// Close the nav drawer after each route
+router.afterEach((to, from) => {
+  EventBus.$emit('navEvent', 'close')
+})
+
+
+
 
 
 new Vue({
