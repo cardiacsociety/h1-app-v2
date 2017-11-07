@@ -185,9 +185,6 @@ router.afterEach((to, from) => {
 })
 
 
-
-
-
 new Vue({
   el: '#app',
   router,

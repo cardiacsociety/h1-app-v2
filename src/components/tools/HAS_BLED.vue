@@ -10,7 +10,7 @@
                                 <v-flex xs12 sm6>
                                     <v-layout>
                                         <v-flex xs10>
-                                            <span class="title">CHA2DS2-VASc Score:</span>
+                                            <span class="title">Score:</span>
                                         </v-flex>
                                         <v-flex xs2 align-right>
                                             <span class="title">{{ score }}</span>
