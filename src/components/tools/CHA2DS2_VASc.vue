@@ -1,73 +1,80 @@
 <template>
     <v-container fluid>
         <v-layout row wrap>
-            <v-flex xs12 sm8 md4>
+            <v-flex xs12 sm10 lg6>
 
-                <v-card>
+                <v-card flat>
                     <v-card-title primary-title>
                         <div class="headline">CHA₂DS₂-VASc Score for Atrial Fibrillation Stroke Risk</div>
-                        <div>Calculates stroke risk for patients with atrial fibrillation.</div>
+                        <div class="grey--text">Calculates stroke risk for patients with atrial fibrillation.</div>
                     </v-card-title>
                     <v-card-text>
                         <v-layout wrap>
 
                             <v-flex xs12>
-                                <v-radio-group label="Age" row v-model="age">
+                                <v-divider class="mb-3"></v-divider>
+                                <div class="subheading">Age</div>
+                                <v-radio-group row v-model="age">
                                     <v-radio label="<65" value="0"></v-radio>
                                     <v-radio label="65-74" value="1"></v-radio>
                                     <v-radio label="75+" value="2"></v-radio>
                                 </v-radio-group>
-                                <v-divider></v-divider>
                             </v-flex>
 
 
                             <v-flex xs12>
-                                <v-radio-group label="Sex" row v-model="sex">
+                                <v-divider class="mb-3"></v-divider>
+                                <div class="subheading">Sex</div>
+                                <v-radio-group row v-model="sex">
                                     <v-radio label="Male" value="0"></v-radio>
                                     <v-radio label="Female" value="1"></v-radio>
                                 </v-radio-group>
-                                <v-divider></v-divider>
                             </v-flex>
 
                             <v-flex xs12>
-                                <v-radio-group label="Congestive Heart Failure history" row v-model="chf">
+                                <v-divider class="mb-3"></v-divider>
+                                <div class="subheading">Congestive Heart Failure history</div>
+                                <v-radio-group row v-model="chf">
                                     <v-radio label="No" value="0"></v-radio>
                                     <v-radio label="Yes" value="1"></v-radio>
                                 </v-radio-group>
-                                <v-divider></v-divider>
                             </v-flex>
 
                             <v-flex xs12>
-                                <v-radio-group label="Hypertension history" row v-model="ht">
+                                <v-divider class="mb-3"></v-divider>
+                                <div class="subheading">Hypertension history</div>
+                                <v-radio-group row v-model="ht">
                                     <v-radio label="No" value="0"></v-radio>
                                     <v-radio label="Yes" value="1"></v-radio>
                                 </v-radio-group>
-                                <v-divider></v-divider>
                             </v-flex>
 
                             <v-flex xs12>
-                                <v-radio-group label="Stroke/TIA/TE history" row v-model="stt">
+                                <v-divider class="mb-3"></v-divider>
+                                <div class="subheading">Stroke/TIA/TE history</div>
+                                <v-radio-group row v-model="stt">
                                     <v-radio label="No" value="0"></v-radio>
                                     <v-radio label="Yes" value="2"></v-radio>
                                 </v-radio-group>
-                                <v-divider></v-divider>
                             </v-flex>
 
                             <v-flex xs12>
-                                <v-radio-group label="Vascular Disease history" row v-model="vd">
-                                    <v-radio label="No" value="0"></v-radio>
-                                    <v-radio label="Yes" value="1"></v-radio>
-                                </v-radio-group>
-                                <v-divider></v-divider>
-                            </v-flex>
-
-                            <v-flex xs12>
-                                <v-radio-group label="Diabetes history" row v-model="diabetes">
+                                <v-divider class="mb-3"></v-divider>
+                                <div class="subheading">Vascular Disease history</div>
+                                <v-radio-group row v-model="vd">
                                     <v-radio label="No" value="0"></v-radio>
                                     <v-radio label="Yes" value="1"></v-radio>
                                 </v-radio-group>
                             </v-flex>
 
+                            <v-flex xs12>
+                                <v-divider class="mb-3"></v-divider>
+                                <div class="subheading">Diabetes history</div>
+                                <v-radio-group row v-model="diabetes">
+                                    <v-radio label="No" value="0"></v-radio>
+                                    <v-radio label="Yes" value="1"></v-radio>
+                                </v-radio-group>
+                            </v-flex>
 
                         </v-layout>
                         <v-alert color="warning" :value="true">

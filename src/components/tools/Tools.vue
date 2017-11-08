@@ -21,7 +21,7 @@
                                     <v-btn dark flat @click.native="tool.dialog = false">Close</v-btn>
                                 </v-toolbar-items>
                             </v-toolbar>
-                            <v-card-text>
+                            <v-card-text class="pa-0">
                                 <component :is="tool.component"></component>
                             </v-card-text>
 
@@ -60,7 +60,7 @@
             dialog: false,
           },
           {
-            name: "CHA2DS2–VASc",
+            name: "CHA₂DS₂-VASc",
             component: "appCHA2DS2",
             dialog: false,
           },
