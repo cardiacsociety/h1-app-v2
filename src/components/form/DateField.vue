@@ -17,14 +17,15 @@
                 prepend-icon="event"
                 readonly
         ></v-text-field>
-        <v-date-picker v-model="date" no-title scrollable actions>
-            <template slot-scope="{ save, cancel }">
-                <v-card-actions>
-                    <v-spacer></v-spacer>
-                    <v-btn flat color="primary" @click="cancel">Cancel</v-btn>
-                    <v-btn flat color="primary" @click="save">OK</v-btn>
-                </v-card-actions>
-            </template>
+        <v-date-picker v-model="date" no-title scrollable>
+        <!--<v-date-picker v-model="date" no-title scrollable actions>-->
+            <!--<template slot-scope="{ save, cancel }">-->
+                <!--<v-card-actions>-->
+                    <!--<v-spacer></v-spacer>-->
+                    <!--<v-btn flat color="primary" @click="cancel">Cancel</v-btn>-->
+                    <!--<v-btn flat color="primary" @click="save">OK</v-btn>-->
+                <!--</v-card-actions>-->
+            <!--</template>-->
         </v-date-picker>
     </v-menu>
 </template>
@@ -34,17 +35,49 @@
 
   export default {
 
+    props: {
+
+      // pass in a method so this component can set a value in the parent
+      handleSetDate: {
+        type: Function,
+        required: true
+      },
+
+      // pass this in from the parent so the date doesn't get reset on page reload
+      dateValue: {
+        type: String,
+        default: null
+      },
+    },
+
     data: () => ({
       date: null,
       menu: false,
       modal: false
     }),
 
-    mounted() {
-      // set the text input to today as a default
-      if (this.date === null) {
-        this.date = moment().format("YYYY-MM-DD")
+    watch: {
+      date(v) {
+        this.handleSetDate(v)
       }
+    },
+
+    mounted() {
+      this.$nextTick(() => {
+
+        // if date was passed in set to this value
+        if (this.dateValue) {
+          this.date = this.dateValue
+        }
+
+        // set the text input to today as a default
+        if (this.date === null) {
+          this.date = moment().format("YYYY-MM-DD")
+        }
+
+        // call the handler to set the date in the parent
+        this.handleSetDate(this.date)
+      })
     }
   }
 </script>

@@ -60,23 +60,7 @@ export default {
   //    "description": "The description of the activity..."
   //  }
   addActivity(body) {
-
-    body = {
-      "activityId": 1,
-      "date": "2017-04-24",
-      "quantity": 1,
-      "description": "The description of the activity..."
-    }
-
-    console.log("POSTing new activity")
-    Vue.http.post('m/activities', body)
-      .then((r) => {
-        console.log("...done")
-        console.log(r)
-      }, (r) => {
-        console.log("...error")
-        console.log(r)
-      })
+    return Vue.http.post('m/activities', body)
   }
 
 

@@ -1,6 +1,8 @@
 <template>
     <div>
-        <app-add-fab></app-add-fab>
+        <app-activity-form>
+            <app-add-fab slot="activator"></app-add-fab>
+        </app-activity-form>
         <h3>Activities Overview</h3>
         <div>
             <div>CPD Progress</div>
@@ -16,11 +18,11 @@
         </div>
         <div>
             <v-list>
-                <app-nav-drawer-link
-                        icon="library_add"
-                        :to="{name: 'activitiesAdd'}"
-                >Add a new activity
-                </app-nav-drawer-link>
+                <app-activity-form>
+                    <app-nav-drawer-link icon="library_add" slot="activator">
+                        Add a new activity
+                    </app-nav-drawer-link>
+                </app-activity-form>
                 <app-nav-drawer-link
                         icon="history"
                         :to="{name: 'activitiesList'}"
@@ -33,12 +35,14 @@
 
 <script>
     import NavDrawerLink from '../nav/NavDrawerLink.vue'
+    import ActivityForm from './ActivityForm.vue'
     import AddFab from './AddFab.vue'
 
     export default {
 
       components: {
         appNavDrawerLink: NavDrawerLink,
+        appActivityForm: ActivityForm,
         appAddFab: AddFab
       },
 

@@ -124,10 +124,6 @@
               {
                 title: 'List',
                 to: {name: 'activitiesList'}
-              },
-              {
-                title: 'Add',
-                to: {name: 'activitiesAdd'}
               }
             ]
           }

@@ -1,14 +1,22 @@
 <template>
     <div>
-        {{ checkAuth('activitiesList') }}
         <app-overlay v-if="overlay"></app-overlay>
-        <app-add-fab></app-add-fab>
-        <h1>Activity List</h1>
-        <div v-for="activity in activities">
-            <router-link :to="{name: 'activityDetail', params: {id: activity.id}}">
-                {{ activity.date }} - {{ activity.activityName }}
-            </router-link>
-        </div>
+        <app-activity-form>
+            <app-add-fab slot="activator"></app-add-fab>
+        </app-activity-form>
+        <h3>Activity List</h3>
+        <v-card v-for="activity in activities">
+            <v-card-title>
+                <div>
+                    <span class="grey--text">{{ activity.date }}</span><br>
+                    <span class="body-2">{{ activity.activityName }}</span><br>
+                    <span class="body-1">{{ activity.description }}</span>
+                </div>
+            </v-card-title>
+            <!--<router-link :to="{name: 'activityDetail', params: {id: activity.id}}">-->
+                <!--{{ activity.date }} - {{ activity.activityName }}-->
+            <!--</router-link>-->
+        </v-card>
     </div>
 </template>
 
@@ -16,12 +24,14 @@
 <script>
   import Overlay from '../Overlay.vue'
   import AddFab from './AddFab.vue'
+  import ActivityForm from '../activities/ActivityForm.vue'
 
   export default {
 
     components: {
       appOverlay: Overlay,
-      appAddFab: AddFab
+      appAddFab: AddFab,
+      appActivityForm: ActivityForm
     },
 
     data() {
@@ -46,7 +56,7 @@
                 date: e.date,
                 categoryName: e.category.name,
                 activityName: e.activity.name,
-                activityDescription: e.activity.description
+                description: e.description
               })
             })
             console.log(r)
@@ -64,11 +74,6 @@
         this.$localStorage.set('appActivities', JSON.stringify(this.activities))
       }
     },
-
-    mounted() {
-      this.navEvent('close')
-    }
-
   }
 </script>
 

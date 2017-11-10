@@ -1,5 +1,12 @@
 <template>
     <v-app>
+        <v-snackbar
+                :top="true"
+                :multi-line="true"
+                :timeout="alert.timeout"
+                :class="alert.class"
+                v-model="alert.show"
+        >{{ alert.text }}</v-snackbar>
         <app-nav-drawer></app-nav-drawer>
         <main>
             <v-content>
@@ -25,15 +32,39 @@
 </template>
 
 <script>
-  //import Toolbar from './components/nav/Toolbar.vue'
+  import { EventBus } from './main'
   import NavDrawer from './components/nav/NavDrawer.vue'
-
 
   export default {
     components: {
       //appToolbar: Toolbar,
       appNavDrawer: NavDrawer
+    },
+
+    data() {
+      return {
+
+        // This is like a 'global' alert that can be triggered by emitting an event
+        // Defaults are 'success' because generally any other type of alert will be shown
+        // in place. This one allows the user to continue on without delay.
+        alert: {
+          show: false,
+          timeout: 6000,    // default
+          class: "success", // default
+          text: "Success",
+        }
+      }
+    },
+
+    mounted() {
+
+      // Listen for alert event, a is an 'alert' object
+      EventBus.$on('alert', (a) => {
+        this.alert = Object.assign(this.alert, a) // merge
+        this.alert.show = true
+      })
     }
+
   }
 </script>
 

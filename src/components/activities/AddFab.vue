@@ -6,7 +6,6 @@
                 fab
                 class="fab orange darken-4"
                 v-show="!show"
-                @click="add"
         >
             <v-icon>add</v-icon>
         </v-btn>
@@ -18,11 +17,6 @@
     data() {
       return {
         show: false
-      }
-    },
-    methods: {
-      add() {
-        this.$router.push({name: 'activitiesAdd'})
       }
     }
   }

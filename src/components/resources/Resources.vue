@@ -22,9 +22,17 @@
                         <div>
                             <app-activity-form
                                     :activityTypes="activityTypes"
-                                    :description="result.name"
+                                    :activityData="{description: result.name + '\r\n' + result.shortUrl}"
                                     :url="result.shortUrl"
-                            ></app-activity-form>
+                            >
+                                <v-btn
+                                        slot="activator"
+                                        class="resource-link"
+                                        color="blue darken-1" flat
+                                        @click="openResource(result.shortUrl)"
+                                >{{ result.shortUrl }}
+                                </v-btn>
+                            </app-activity-form>
                             <v-divider></v-divider>
                         </div>
                     </div>
@@ -40,7 +48,7 @@
   import api from '../../api/mapp'
 
   import ResourceDescription from './ResourceDescription.vue'
-  import Form from '../activities/Form.vue'
+  import Form from '../activities/ActivityForm.vue'
 
   export default {
 
@@ -61,9 +69,14 @@
     },
 
     methods: {
+
       fetchActivityTypes() {
         this.activityTypes = api.getActivityTypes()
-      }
+      },
+
+      openResource(url) {
+        window.open(url)
+      },
     },
 
     mounted() {
@@ -79,13 +92,21 @@
         border-radius: 5px;
         font-size: 20px;
     }
+
     .ais-highlight em {
         background-color: yellow;
     }
+
     .resource-row {
         margin-bottom: 20px;
     }
+
     .resource-title {
         font-weight: 500;
+    }
+
+    .resource-link {
+        text-transform: lowercase;
+        margin-left: 0px;
     }
 </style>
