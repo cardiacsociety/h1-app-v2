@@ -16,15 +16,17 @@
                 v-model="date"
                 prepend-icon="event"
                 readonly
+                required
+                :rules="dateRules"
         ></v-text-field>
         <v-date-picker v-model="date" no-title scrollable>
-        <!--<v-date-picker v-model="date" no-title scrollable actions>-->
+            <!--<v-date-picker v-model="date" no-title scrollable actions>-->
             <!--<template slot-scope="{ save, cancel }">-->
-                <!--<v-card-actions>-->
-                    <!--<v-spacer></v-spacer>-->
-                    <!--<v-btn flat color="primary" @click="cancel">Cancel</v-btn>-->
-                    <!--<v-btn flat color="primary" @click="save">OK</v-btn>-->
-                <!--</v-card-actions>-->
+            <!--<v-card-actions>-->
+            <!--<v-spacer></v-spacer>-->
+            <!--<v-btn flat color="primary" @click="cancel">Cancel</v-btn>-->
+            <!--<v-btn flat color="primary" @click="save">OK</v-btn>-->
+            <!--</v-card-actions>-->
             <!--</template>-->
         </v-date-picker>
     </v-menu>
@@ -44,7 +46,7 @@
       },
 
       // pass this in from the parent so the date doesn't get reset on page reload
-      dateValue: {
+      initialDateValue: {
         type: String,
         default: null
       },
@@ -53,7 +55,10 @@
     data: () => ({
       date: null,
       menu: false,
-      modal: false
+      modal: false,
+      dateRules: [
+        v => !!v || "Required"
+      ]
     }),
 
     watch: {
@@ -65,9 +70,8 @@
     mounted() {
       this.$nextTick(() => {
 
-        // if date was passed in set to this value
-        if (this.dateValue) {
-          this.date = this.dateValue
+        if (this.initialDateValue) {
+          this.date = this.initialDateValue
         }
 
         // set the text input to today as a default

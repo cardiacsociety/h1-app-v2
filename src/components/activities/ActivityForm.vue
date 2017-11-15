@@ -15,15 +15,23 @@
                     <v-card-text>
                         <v-container grid-list-md>
                             <v-layout wrap>
-                                <v-flex xs6>
-                                    <h4>Activity</h4>
+                                <v-flex xs8>
+                                    <h4>
+                                        Activity
+                                        <span v-if="activity.id">
+                                            <v-chip color="orange darken-2"
+                                                    text-color="white">edit ID: {{ activity.id }}</v-chip>
+                                        </span>
+                                        <span v-else>
+                                            <v-chip color="green" text-color="white">new</v-chip>
+                                        </span>
+                                    </h4>
                                 </v-flex>
-
-                                <v-flex xs6 class="text-xs-right">
+                                <v-flex xs4 class="text-xs-right">
                                     <v-btn class="mr-0" :color="timerColour + ' darken-1'" flat
                                            @click.native="toggleTimer()"
                                     >
-                                        {{ timeSeconds | timerDisplay }}
+                                        {{ timerSeconds | timerDisplay }}
                                         <v-icon>
                                             {{ timerIcon }}
                                         </v-icon>
@@ -33,7 +41,7 @@
                                 <v-flex xs12 sm6>
                                     <app-form-date-field
                                             :handleSetDate="setDate"
-                                            :dateValue="activity.date"
+                                            :initialDateValue="date"
                                     ></app-form-date-field>
                                 </v-flex>
 
@@ -42,9 +50,9 @@
                                             label="Quantity (hrs)"
                                             prepend-icon="timer"
                                             v-on:focus="stopTimer"
+                                            v-model="quantity"
                                             required
                                             v-bind:rules="quantityRules"
-                                            v-model="timeHours"
                                     ></v-text-field>
                                 </v-flex>
 
@@ -52,10 +60,9 @@
                                     <v-select
                                             label="Activity Type"
                                             :items="activityTypes"
-                                            v-model="activityTypeSelected"
+                                            v-model="activity.activityId"
                                             item-text="name"
                                             item-value="id"
-                                            return-object
                                             required
                                             v-bind:rules="activityTypeRules"
                                     ></v-select>
@@ -66,7 +73,7 @@
                                             label="Description"
                                             multi-line
                                             rows="3"
-                                            v-model="description"
+                                            v-model="activity.description"
                                             required
                                             v-bind:rules="descriptionRules"
                                     ></v-text-field>
@@ -112,13 +119,19 @@
       // Option to pass in the list of activity types. This is useful when rendering this component
       // for each item in a list as it is inefficient to make an API call to get the same list, for each item.
       // If this list is NOT passed in then it will be created when the component mounts.
-      activityTypes: {
+      activityTypesData: {
         type: Array
       },
 
       // Option to pass in an activity object to pre-populate
       activityData: {
         type: Object,
+      },
+
+      // Force a fresh form
+      reset: {
+        type: Boolean,
+        default: false
       }
     },
 
@@ -133,20 +146,29 @@
         errorAlert: false,
         errorMessage: null,
 
-        timeSeconds: 30, // hack to avoid initial validation message
+        timerSeconds: 30, // hack to avoid initial validation message
         timerRunning: false,
         intervalId: null,
 
-        // Form elements
-        date: null,
-        lastComputedHours: 0,
-        activityTypeSelected: 0,
-        description: "",
+        // Form data elements
+        activity: {
+          id: null,
+          activityId: null, // activity TYPE id
+          date: null,
+          quantity: 0,
+          description: "",
+        },
+
+        // array of activity type objects
+        activityTypes: [],
+        activityTypeSelected: {},
+
+        lastQuantity: 0,
 
         // Validation
-        valid: false,
+        //valid: false,
         quantityRules: [
-          (v) => !!v && v && v > 0 || "Required, >0"
+          (v) => !!v && v && v > 0 || "Required > 0"
         ],
         activityTypeRules: [
           (v) => !!v || "Required"
@@ -172,53 +194,54 @@
         return 'play_arrow'
       },
 
-      // this is the 'quantity' value in the input box
-      timeHours: {
-        // getter
-        get() {
-          // only compute the value if the timer is running, otherwise the value is computed
-          // as the user types into the input box, creating all kinds of weirdness.
-          if (this.timerRunning) {
-            this.lastComputedHours = (this.timeSeconds / 3600).toFixed(2)
-          }
-          return this.lastComputedHours
-        },
+      date() {
+        if (this.activityData && this.activityData.date) {
+          return this.activityData.date
+        }
+        if (this.activity && this.activity.date) {
+          return this.activity.date
+        }
+        return ""
+      },
 
-        // setter called when the Quantity input is updated, either by the timer
-        // or by user input into the text field
+
+      // computed 'quantity' value for the text input. Only calculated when the timer is running to
+      // avoid interference with manual user input.
+      quantity: {
+        get() {
+          if (this.timerRunning) {
+            this.lastQuantity = (this.timerSeconds / 3600).toFixed(2)
+          }
+          return this.lastQuantity
+        },
+        // setter called when input is updated, by timer or user input
         set(hours) {
-          this.timeSeconds = hours * 3600 // sets the timer value
-          this.lastComputedHours = hours  // updates timeHours (quantity) - see above
+          this.timerSeconds = hours * 3600 // sets the timer value
+          this.lastQuantity = hours  // updates quantity (quantity) - see above
         }
       },
 
-      // computed object that will be passed in the api call
-      activity: {
-
-        get() {
-
-          let a = {
-            quantity: parseFloat(this.timeHours),
-            activityId: this.activityTypeSelected.id,
-            description: this.description,
-            date: this.date
-          }
-
-          // valid flag to activate save button
-          if (a.quantity > 0 && a.activityId && a.description.length > 0 && a.date.length > 0) {
-            this.valid = true
-          } else {
-            this.valid = false
-          }
-
-          return a
+      valid: {
+        set() {
+          return false
         },
-
-        // this will merge supplied fields?
-        set(activity) {
-          return activity
+        get() {
+          if (this.activity.quantity
+            && this.activity.activityId
+            && this.activity.date
+            && this.activity.description) {
+            return true
+          }
+          return false
         }
+      },
 
+    },
+
+    watch: {
+      // sync the computed quantity with activity.quantity
+      quantity() {
+        this.activity.quantity = parseFloat(this.quantity)
       }
     },
 
@@ -227,18 +250,20 @@
       // open the form
       openForm() {
         this.dialog = true
-        this.startTimer()
+        if (this.reset) {
+          this.resetForm()
+        }
       },
 
       // setter for the date child component
       setDate(date) {
-        this.date = date
+        this.activity.date = date
       },
 
       startTimer() {
         this.timerRunning = true
         this.IntervalId = setInterval(() => {
-          this.timeSeconds++
+          this.timerSeconds++
         }, 1000)
       },
 
@@ -255,27 +280,42 @@
         }
       },
 
-      // Save the activity
+      // Save the activity, if we have an id we are updating, if not, adding
       saveActivity() {
-        console.log("Saving activity", this.activity)
-        api.addActivity(this.activity)
-          .then((r) => {
-            console.log(r)
-            // show a global snackbar alert so user can keep going
-            this.dialog = false
-            EventBus.$emit('alert', {text: "Activity saved!"})
 
-            // this.alert = true
-            // this.alertType = "success"
-            // this.alertIcon = "check_circle"
-            // this.alertMessage = "Activity saved."
-            // this.showForm = false
-          }, (r) => {
-            console.log(r)
-            // show error alert on this page so user can try again
-            this.errorAlert = true
-            this.errorMessage = r.status + " " + r.statusText + " - " + r.body.message
-          })
+        if (this.activity.id) {
+          console.log("Update activity")
+          api.updateActivity(this.activity)
+            .then((r) => {
+              console.log(r)
+              this.dialog = false // close form
+              EventBus.$emit('alert', {text: "Activity updated!"}) // global 'snackbar' alert
+              EventBus.$emit('updatedActivity') // trigger a forceUpdate() in parent so changes are visible
+            }, (r) => {
+              console.log(r)
+              this.errorAlert = true // this page error alert
+              this.errorMessage = r.status + " " + r.statusText + " - " + r.body.message
+            })
+
+        } else {
+          console.log("Add activity")
+          api.addActivity(this.activity)
+            .then((r) => {
+              console.log(r)
+              this.dialog = false // close form
+              EventBus.$emit('alert', {text: "Activity saved!"}) // global 'snackbar' alert
+              EventBus.$emit('addedActivity', this.activity) // update parent view
+            }, (r) => {
+              console.log(r)
+              this.errorAlert = true // this page error alert
+              this.errorMessage = r.status + " " + r.statusText + " - " + r.body.message
+            })
+        }
+      },
+
+      // clear form values - note, also clears the date
+      resetForm() {
+        this.$refs.form.reset()
       }
 
     },
@@ -297,33 +337,75 @@
 
     mounted() {
 
-      // Fetch activity types for select list,  if none were passed in
-      if (!this.activityTypes || this.activityTypes.length === 0) {
-        this.activityTypes = api.getActivityTypes()
-      }
+      this.$nextTick(() => {
 
-      // Initialise local values if an activityData object was passed in
-      if (this.activityData) {
-        if (this.activityData.description) {
-          this.description = this.activityData.description
-        }
-        if (this.activityData.quantity) {
-          this.timeHours = this.activityData.quantity
-        }
-        if (this.activityData.typeId) {
-          // loop through activityTypes (array of objects) to find the matching typeId
-          this.activityTypes.forEach((t) => {
-            if (t.id == this.activityData.typeId) {
-              this.activityTypeSelected = t
-            }
-          })
-        }
-        if (this.activityData.date) {
-          this.date = this.activityData.date
-        }
-      }
-    }
+        // Fetch activity types for select list, if none were passed in
+        if (this.activityTypesData && this.activityTypesData.length > 0) {
+          this.activityTypes = this.activityTypesData
+        } else {
+          api.getActivityTypes()
+            .then(r => {
+              r.body.data.forEach(e => {
+                this.activityTypes.push({
+                  id: e.id,
+                  name: e.name,
+                  unit: e.credit.unitName
+                })
+              })
 
+              // id of activity TYPE
+              // this is here because can't be set this until we have the list
+              if (this.activityData.activityId) {
+                console.log("pre-select activity type id", this.activityData.activityId)
+                this.activityTypes.forEach((t) => {
+                  if (t.id === this.activityData.activityId) {
+                    this.activity.activityId = t.id
+                  }
+                })
+              }
+
+            }, r => {
+              console.log("Error fetching activity types", r)
+            })
+        }
+
+        // activityData object can be used to initialise the local activity object
+        if (this.activityData) {
+
+          // id of member activity record (editing an existing record)
+          if (this.activityData.id) {
+            this.activity.id = this.activityData.id
+          }
+
+          // quantity (generally hours)
+          if (this.activityData.quantity) {
+            // initialise the computed value, watcher will set activity.quantity
+            this.quantity = this.activityData.quantity
+          }
+
+          // id of activity TYPE
+          if (this.activityData.activityId) {
+            console.log("pre-select activity type id", this.activityData.activityId)
+            this.activityTypes.forEach((t) => {
+              if (t.id === this.activityData.activityId) {
+                this.activity.activityId = t.id
+              }
+            })
+          }
+
+          // Description / details
+          if (this.activityData.description) {
+            this.activity.description = this.activityData.description
+          }
+        }
+
+        // Start the timer if it is a new record
+        if (!this.activityData || !this.activityData.id) {
+          this.startTimer()
+        }
+      })
+
+    },
   }
 </script>
 

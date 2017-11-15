@@ -1,11 +1,17 @@
 <template>
     <div>
         <app-overlay v-if="overlay"></app-overlay>
-        <app-activity-form>
-            <app-add-fab slot="activator"></app-add-fab>
+        <app-activity-form
+                :activityTypesData="activityTypes"
+                :reset="true"
+        >
+            <app-add-fab
+                    slot="activator"
+            ></app-add-fab>
         </app-activity-form>
         <h3>Activity List</h3>
-        <v-card v-for="activity in activities">
+
+        <v-card flat v-for="(activity, index) in activities" :key="index">
             <v-card-title>
                 <div>
                     <span class="grey--text">{{ activity.date }}</span><br>
@@ -13,15 +19,35 @@
                     <span class="body-1">{{ activity.description }}</span>
                 </div>
             </v-card-title>
-            <!--<router-link :to="{name: 'activityDetail', params: {id: activity.id}}">-->
-                <!--{{ activity.date }} - {{ activity.activityName }}-->
-            <!--</router-link>-->
+            <v-card-actions>
+                <app-activity-form
+                        :activityTypesData="activityTypes"
+                        :activityData="{
+                          id: activity.id,
+                          activityId: activity.activityId,
+                          date: activity.date,
+                          quantity: activity.quantity,
+                          description: activity.description,
+                        }"
+                >
+                    <v-btn icon ripple slot="activator">
+                        <v-icon color="orange darken-2">edit</v-icon>
+                    </v-btn>
+                </app-activity-form>
+                <!--<v-btn icon ripple>-->
+                <!--<v-icon>attachment</v-icon>-->
+                <!--</v-btn>-->
+            </v-card-actions>
+            <v-divider></v-divider>
         </v-card>
+
     </div>
 </template>
 
 
 <script>
+  import { EventBus } from "../../main";
+  import api from '../../api/mapp'
   import Overlay from '../Overlay.vue'
   import AddFab from './AddFab.vue'
   import ActivityForm from '../activities/ActivityForm.vue'
@@ -37,30 +63,30 @@
     data() {
       return {
         overlay: false,
-        activities: []
+        activities: [],
+
+        // list of activity types get passed to form as props. Had as computed
+        // but was then called for every row and was returning empty, sometimes?
+        activityTypes: []
       }
     },
 
-    mounted() {
-      this.fetch()
-    },
-
     methods: {
-      fetch() {
+      fetchUserActivities() {
         this.overlay = true
-        this.$http.get('m/activities')
+        api.getUserActivities()
           .then(r => {
-            r.body.data.forEach(e => {
+            r.body.data.forEach((v, i) => {
               this.activities.push({
-                id: e.activity.id,
-                date: e.date,
-                categoryName: e.category.name,
-                activityName: e.activity.name,
-                description: e.description
+                id: v.id,
+                date: v.date,
+                description: v.description,
+                quantity: v.creditData.quantity,
+                activityId: v.activity.id, // activity TYPE id
+                activityName: v.activity.name,
+                categoryName: v.category.name,
               })
             })
-            console.log(r)
-            this.store()
             this.overlay = false
           }, r => {
             console.log(r)
@@ -69,14 +95,51 @@
           })
       },
 
-      // Store the activities in localstorage (testing)
-      store() {
-        this.$localStorage.set('appActivities', JSON.stringify(this.activities))
-      }
+      fetchActivityTypes() {
+        api.getActivityTypes()
+          .then(r => {
+            r.body.data.forEach(e => {
+              this.activityTypes.push({
+                id: e.id,
+                name: e.name,
+                unit: e.credit.unitName
+              })
+            })
+          }, r => {
+            console.log("Error fetching activity types", r)
+          })
+      },
+
     },
+
+    // Store the activities in localstorage (testing)
+    // store() {
+    //   this.$localStorage.set('appActivities', JSON.stringify(this.activities))
+    // }
+
+    created() {
+      this.fetchUserActivities()
+      this.fetchActivityTypes()
+
+      // listen for request to update screen, eg after an item is edited
+      EventBus.$on('updatedActivity', (activity, index) => {
+        console.log("Updating the activity at index " + index)
+        //this.fetchUserActivities()
+        //this.$forceUpdate()
+      })
+
+      EventBus.$on('addedActivity', (activity) => {
+        console.log("A new activity was added... add to local list")
+        this.activities.unshift(activity) // prepend the new activity
+      })
+
+    },
+
   }
 </script>
 
-<style>
-
+<style scoped>
+    .card__title {
+        padding-bottom: 0;
+    }
 </style>

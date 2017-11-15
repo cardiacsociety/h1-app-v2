@@ -21,9 +21,8 @@
                         </span>
                         <div>
                             <app-activity-form
-                                    :activityTypes="activityTypes"
+                                    :activityTypesData="activityTypes"
                                     :activityData="{description: result.name + '\r\n' + result.shortUrl}"
-                                    :url="result.shortUrl"
                             >
                                 <v-btn
                                         slot="activator"
@@ -64,14 +63,25 @@
 
         // list of activity types get passed to form as props. Had as computed
         // but was then called for every row and was returning empty, sometimes?
-        activityTypes: null
+        activityTypes: []
       }
     },
 
     methods: {
 
       fetchActivityTypes() {
-        this.activityTypes = api.getActivityTypes()
+        api.getActivityTypes()
+          .then(r => {
+            r.body.data.forEach(e => {
+              this.activityTypes.push({
+                id: e.id,
+                name: e.name,
+                unit: e.credit.unitName
+              })
+            })
+          }, r => {
+            console.log("Error fetching activity types", r)
+          })
       },
 
       openResource(url) {
@@ -80,7 +90,9 @@
     },
 
     mounted() {
-      this.fetchActivityTypes()
+      this.$nextTick(() => {
+        this.fetchActivityTypes()
+      })
     }
   }
 </script>

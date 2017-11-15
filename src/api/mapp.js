@@ -31,26 +31,9 @@ export default {
 
   // get a list of activity TYPES
   getActivityTypes() {
-
-    let activityTypes = []
-
-    Vue.http.get('g/activities')
-      .then(r => {
-        r.body.data.forEach(e => {
-          activityTypes.push({
-            id: e.id,
-            name: e.name,
-            unit: e.credit.unitName
-          })
-        })
-        console.log("API called to fetch activity types")
-      }, r => {
-        console.log(r)
-      })
-
-    return activityTypes
+    console.log("API called to fetch activity types")
+    return Vue.http.get('g/activities')
   },
-
 
   // Add a member activity record, activity is an object:
   //  {
@@ -59,13 +42,18 @@ export default {
   //    "quantity": 1,
   //    "description": "The description of the activity..."
   //  }
-  addActivity(body) {
-    return Vue.http.post('m/activities', body)
+  addActivity(activity) {
+    return Vue.http.post('m/activities', activity)
+  },
+  updateActivity(activity) {
+    return Vue.http.put(`m/activities/${activity.id}`, activity)
+  },
+
+  // fetch all activities for the user
+  // todo need to make this an auto scrolling list
+  getUserActivities() {
+    return Vue.http.get('m/activities')
   }
-
-
-
-
 
 }
 

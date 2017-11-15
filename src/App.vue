@@ -70,7 +70,7 @@
 
 <style>
     main {
-        padding: 20px;
+        /*padding: 20px;*/
     }
     /* this is for one initial frame only */
     .trans-enter {
@@ -85,5 +85,9 @@
     .trans-leave-active {
         transition: opacity 0.2s;
         opacity: 0;
+    }
+
+    .lowercase {
+        text-transform: lowercase;
     }
 </style>
