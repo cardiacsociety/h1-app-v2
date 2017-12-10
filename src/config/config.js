@@ -4,8 +4,10 @@ const config = {
   ALGOLIA_RESOURCES_INDEX: "RESOURCES"
 }
 if (process.env.NODE_ENV === 'production') {
-  config.API_BASE_URL = "https://mappcpd-csanz-web-services.herokuapp.com/v1"
+  config.REST_API_BASE_URL = "https://mappcpd-csanz-web-services.herokuapp.com/v1"
+  config.GRAPHQL_API_BASE_URL = "https://mappcpd-csanz-graphql.herokuapp.com/graphql"
 } else {
-  config.API_BASE_URL = "http://localhost:5000/v1"
+  config.REST_API_BASE_URL = "http://localhost:5000/v1"
+  config.GRAPHQL_API_BASE_URL = "http://localhost:5001/graphql"
 }
 module.exports = config

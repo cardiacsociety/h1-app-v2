@@ -15,6 +15,10 @@
             <v-card-title>
                 <div>
                     <span class="grey--text">{{ activity.date }}</span><br>
+                    <span class="grey--text">qty: {{ activity.quantity }}</span><br>
+                    <span class="grey--text">cat: {{ activity.categoryName }}</span><br>
+                    <span class="grey--text">typeID: {{ activity.typeId }}</span><br>
+                    <span class="grey--text">ID: {{ activity.id }}</span><br>
                     <span class="body-2">{{ activity.activityName }}</span><br>
                     <span class="body-1">{{ activity.description }}</span>
                 </div>
@@ -24,7 +28,7 @@
                         :activityTypesData="activityTypes"
                         :activityData="{
                           id: activity.id,
-                          activityId: activity.activityId,
+                          typeId: activity.typeId,
                           date: activity.date,
                           quantity: activity.quantity,
                           description: activity.description,
@@ -46,96 +50,97 @@
 
 
 <script>
-  import { EventBus } from "../../main";
-  import api from '../../api/mapp'
-  import Overlay from '../Overlay.vue'
-  import AddFab from './AddFab.vue'
-  import ActivityForm from '../activities/ActivityForm.vue'
+    import {EventBus} from "../../main";
+    import api from '../../api/mapp'
+    import graphql from '../../api/graphql'
+    import Overlay from '../Overlay.vue'
+    import AddFab from './AddFab.vue'
+    import ActivityForm from '../activities/ActivityForm.vue'
 
-  export default {
+    export default {
 
-    components: {
-      appOverlay: Overlay,
-      appAddFab: AddFab,
-      appActivityForm: ActivityForm
-    },
+        components: {
+            appOverlay: Overlay,
+            appAddFab: AddFab,
+            appActivityForm: ActivityForm
+        },
 
-    data() {
-      return {
-        overlay: false,
-        activities: [],
+        data() {
+            return {
+                overlay: false,
+                activities: [],
 
-        // list of activity types get passed to form as props. Had as computed
-        // but was then called for every row and was returning empty, sometimes?
-        activityTypes: []
-      }
-    },
+                // list of activity types get passed to form as props.
+                activityTypes: []
+            }
+        },
 
-    methods: {
-      fetchUserActivities() {
-        this.overlay = true
-        api.getUserActivities()
-          .then(r => {
-            r.body.data.forEach((v, i) => {
-              this.activities.push({
-                id: v.id,
-                date: v.date,
-                description: v.description,
-                quantity: v.creditData.quantity,
-                activityId: v.activity.id, // activity TYPE id
-                activityName: v.activity.name,
-                categoryName: v.category.name,
-              })
+        methods: {
+            fetchUserActivities() {
+                this.overlay = true
+                graphql.getMemberActivities()
+                    .then(data => {
+                        let activities = data.memberUser.activities
+                        activities.forEach((v) => {
+                            this.activities.push({
+                                id: v.id,
+                                date: v.date,
+                                description: v.description,
+                                quantity: v.credit,
+                                typeId: v.typeId,
+                                activityName: v.type,
+                                categoryName: v.category,
+                            })
+                        })
+                        this.overlay = false
+                    }, r => {
+                        console.log(r)
+                        // If 401 then need to login
+                        this.overlay = false
+                    })
+            },
+
+            fetchActivityTypes() {
+                api.getActivityTypes()
+                    .then(r => {
+                        r.body.data.forEach(e => {
+                            this.activityTypes.push({
+                                id: e.id,
+                                name: e.name,
+                                unit: e.credit.unitName
+                            })
+                        })
+                    }, r => {
+                        console.log("Error fetching activity types", r)
+                    })
+            },
+
+        },
+
+        // Store the activities in localstorage (testing)
+        // store() {
+        //   this.$localStorage.set('appActivities', JSON.stringify(this.activities))
+        // }
+
+        mounted() {
+            this.fetchUserActivities()
+            this.fetchActivityTypes()
+
+            // listen for request to update screen, eg after an item is edited
+            EventBus.$on('updatedActivity', (activity, index) => {
+                console.log("Updating the activity at index " + index)
+                //this.fetchUserActivities()
+                //this.$forceUpdate()
             })
-            this.overlay = false
-          }, r => {
-            console.log(r)
-            // If 401 then need to login
-            this.overlay = false
-          })
-      },
 
-      fetchActivityTypes() {
-        api.getActivityTypes()
-          .then(r => {
-            r.body.data.forEach(e => {
-              this.activityTypes.push({
-                id: e.id,
-                name: e.name,
-                unit: e.credit.unitName
-              })
+            EventBus.$on('addedActivity', (activity) => {
+                console.log("A new activity was added... add to local list")
+                this.activities.unshift(activity) // prepend the new activity
             })
-          }, r => {
-            console.log("Error fetching activity types", r)
-          })
-      },
 
-    },
+        },
 
-    // Store the activities in localstorage (testing)
-    // store() {
-    //   this.$localStorage.set('appActivities', JSON.stringify(this.activities))
-    // }
-
-    created() {
-      this.fetchUserActivities()
-      this.fetchActivityTypes()
-
-      // listen for request to update screen, eg after an item is edited
-      EventBus.$on('updatedActivity', (activity, index) => {
-        console.log("Updating the activity at index " + index)
-        //this.fetchUserActivities()
-        //this.$forceUpdate()
-      })
-
-      EventBus.$on('addedActivity', (activity) => {
-        console.log("A new activity was added... add to local list")
-        this.activities.unshift(activity) // prepend the new activity
-      })
-
-    },
-
-  }
+    }
 </script>
 
 <style scoped>

@@ -3,7 +3,7 @@ import Vue from 'vue'
 
 import VueResource from 'vue-resource'
 Vue.use(VueResource)
-Vue.http.options.root = Config.API_BASE_URL
+Vue.http.options.root = Config.REST_API_BASE_URL
 
 import VueLocalStorage from 'vue-localstorage'
 Vue.use(VueLocalStorage)
@@ -51,7 +51,7 @@ export default {
 
   // fetch all activities for the user
   // todo need to make this an auto scrolling list
-  getUserActivities() {
+  getMemberActivities() {
     return Vue.http.get('m/activities')
   }
 

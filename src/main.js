@@ -29,7 +29,7 @@ Vue.use(InstantSearch)
 
 // API stuff...
 Vue.use(VueResource);
-Vue.http.options.root = Config.API_BASE_URL
+Vue.http.options.root = Config.REST_API_BASE_URL
 
 // interceptors (middleware)
 //Vue.http.interceptors.push((request, next) => {
