@@ -1,8 +1,7 @@
-import Config from '../config/config'
+import Config from '../config'
 import Vue from 'vue'
 import VueLocalStorage from 'vue-localstorage'
 import { request, GraphQLClient } from 'graphql-request'
-import gql from 'graphql-tag'
 
 Vue.use(VueLocalStorage)
 
@@ -12,6 +11,21 @@ const url = Config.GRAPHQL_API_BASE_URL
 
 
 export default {
+
+
+    // fetch activity types
+    getActivityTypes() {
+
+        let query = `query {
+                        activities {
+                            id
+                            code
+                            name
+                        }
+                    }`
+        return request(url, query)
+    },
+
 
     // fetch activities for the user
     getMemberActivities() {

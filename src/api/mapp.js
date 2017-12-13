@@ -1,4 +1,4 @@
-import Config from '../config/config'
+import Config from '../config'
 import Vue from 'vue'
 
 import VueResource from 'vue-resource'

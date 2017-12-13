@@ -11,7 +11,7 @@
         </app-activity-form>
         <h3>Activity List</h3>
 
-        <v-card flat v-for="(activity, index) in activities" :key="index">
+        <v-card flat v-for="(activity, index) in displayActivities" :key="index">
             <v-card-title>
                 <div>
                     <span class="grey--text">{{ activity.date }}</span><br>
@@ -25,7 +25,6 @@
             </v-card-title>
             <v-card-actions>
                 <app-activity-form
-                        :activityTypesData="activityTypes"
                         :activityData="{
                           id: activity.id,
                           typeId: activity.typeId,
@@ -45,14 +44,14 @@
             <v-divider></v-divider>
         </v-card>
 
+        <div id="load-more" class="scroll-watcher">loading more... {{ listCount }}</div>
     </div>
 </template>
 
 
 <script>
-    import {EventBus} from "../../main";
-    import api from '../../api/mapp'
-    import graphql from '../../api/graphql'
+    import ScrollMonitor from 'scrollmonitor'
+    import {EventBus} from '../../main';
     import Overlay from '../Overlay.vue'
     import AddFab from './AddFab.vue'
     import ActivityForm from '../activities/ActivityForm.vue'
@@ -62,81 +61,63 @@
         components: {
             appOverlay: Overlay,
             appAddFab: AddFab,
-            appActivityForm: ActivityForm
+            appActivityForm: ActivityForm,
         },
 
         data() {
             return {
+                listCount: 5, // start with 5 on screen
                 overlay: false,
-                activities: [],
+            }
+        },
 
-                // list of activity types get passed to form as props.
-                activityTypes: []
+        computed: {
+            activities() {
+                return this.$store.state.memberActivities
+            },
+            activityTypes() {
+                return this.$store.state.activityTypes
+            },
+            displayActivities() {
+                return this.activities.slice(0, this.listCount)
             }
         },
 
         methods: {
-            fetchUserActivities() {
+            loadMore() {
                 this.overlay = true
-                graphql.getMemberActivities()
-                    .then(data => {
-                        let activities = data.memberUser.activities
-                        activities.forEach((v) => {
-                            this.activities.push({
-                                id: v.id,
-                                date: v.date,
-                                description: v.description,
-                                quantity: v.credit,
-                                typeId: v.typeId,
-                                activityName: v.type,
-                                categoryName: v.category,
-                            })
-                        })
-                        this.overlay = false
-                    }, r => {
-                        console.log(r)
-                        // If 401 then need to login
-                        this.overlay = false
-                    })
-            },
-
-            fetchActivityTypes() {
-                api.getActivityTypes()
-                    .then(r => {
-                        r.body.data.forEach(e => {
-                            this.activityTypes.push({
-                                id: e.id,
-                                name: e.name,
-                                unit: e.credit.unitName
-                            })
-                        })
-                    }, r => {
-                        console.log("Error fetching activity types", r)
-                    })
-            },
-
+                this.listCount += 5
+                this.overlay = false
+            }
         },
 
-        // Store the activities in localstorage (testing)
-        // store() {
-        //   this.$localStorage.set('appActivities', JSON.stringify(this.activities))
-        // }
-
         mounted() {
-            this.fetchUserActivities()
-            this.fetchActivityTypes()
+
+            // load more
+            let elem = document.getElementById('load-more')
+            let watcher = scrollMonitor.create(elem)
+            watcher.enterViewport(() => {
+                this.loadMore()
+            })
+
 
             // listen for request to update screen, eg after an item is edited
             EventBus.$on('updatedActivity', (activity, index) => {
                 console.log("Updating the activity at index " + index)
-                //this.fetchUserActivities()
-                //this.$forceUpdate()
             })
 
             EventBus.$on('addedActivity', (activity) => {
                 console.log("A new activity was added... add to local list")
                 this.activities.unshift(activity) // prepend the new activity
             })
+
+            // setTimeout(() => {
+            //     this.$store.commit("setMemberActivity", {id: 666, date: "2017-12-25", description: "The Beast"})
+            // }, 3000)
+            // setInterval(() => {
+            //     this.n++
+            // }, 1000)
+
 
         },
 
@@ -146,5 +127,8 @@
 <style scoped>
     .card__title {
         padding-bottom: 0;
+    }
+    .scroll-watcher {
+        background-color: yellow
     }
 </style>

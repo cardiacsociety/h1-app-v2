@@ -42,7 +42,7 @@
 </template>
 
 <script>
-  import Config from '../../config/config'
+  import Config from '../../config'
   import {EventBus} from '../../main'
   import api from '../../api/mapp'
 

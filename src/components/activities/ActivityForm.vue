@@ -117,11 +117,10 @@
         props: {
 
             // Option to pass in the list of activity types. This is useful when rendering this component
-            // for each item in a list as it is inefficient to make an API call to get the same list, for each item.
-            // If this list is NOT passed in then it will be created when the component mounts.
-            activityTypesData: {
-                type: Array
-            },
+            // // for each item in a list as it is inefficient to make an API call to get the same list, for each item.
+            // activityTypesData: {
+            //      type: Array
+            // },
 
             // Option to pass in an activity object to pre-populate
             activityData: {
@@ -160,7 +159,7 @@
                 },
 
                 // array of activity type objects
-                activityTypes: [],
+                //activityTypes: [],
 
                 lastQuantity: 0,
 
@@ -201,6 +200,12 @@
                     return this.activity.date
                 }
                 return ""
+            },
+
+
+            // activity types in select list
+            activityTypes() {
+                return this.$store.state.activityTypes
             },
 
 
@@ -355,37 +360,6 @@
 
             this.$nextTick(() => {
 
-                // Fetch activity types for select list, if none were passed in
-                if (this.activityTypesData && this.activityTypesData.length > 0) {
-                    this.activityTypes = this.activityTypesData
-                } else {
-                    api.getActivityTypes()
-                        .then(r => {
-                            r.body.data.forEach(e => {
-                                this.activityTypes.push({
-                                    id: e.id,
-                                    name: e.name,
-                                    unit: e.credit.unitName
-                                })
-                            })
-
-                            // If the form is pre-populating with an existing activity record the activity type needs to
-                            // be pre-selected in the drop down list. However, the list may not yet have been loaded so this
-                            // function is here (after mount) to do that job once we know everything is fetched.
-                            // if (this.activityData && this.activityData.typeId) {
-                            //     console.log("pre-select activity type id", this.activityData.typeId)
-                            //     this.activityTypes.forEach((t) => {
-                            //         if (t.id === this.activityData.typeId) {
-                            //             this.activity.typeId = t.id
-                            //         }
-                            //     })
-                            // }
-
-                        }, r => {
-                            console.log("Error fetching activity types", r)
-                        })
-                }
-
                 // activityData object can be used to initialise the local activity object
                 if (this.activityData) {
 
@@ -403,12 +377,6 @@
                     // id of activity TYPE
                     if (this.activityData.typeId) {
                         this.activity.typeId = this.activityData.typeId
-                        //console.log("pre-select activity type id", this.activityData.typeId)
-                        // this.activityTypes.forEach((t) => {
-                        //     if (t.id === this.activityData.typeId) {
-                        //         this.activity.typeId = t.id
-                        //     }
-                        // })
                     }
 
                     // Description / details
