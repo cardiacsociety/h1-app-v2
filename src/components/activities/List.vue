@@ -11,16 +11,25 @@
         </app-activity-form>
         <h3>Activity List</h3>
 
-        <v-card flat v-for="(activity, index) in displayActivities" :key="index">
+        <!--<div id="load-more-top">-->
+            <!--<div v-if="showLoading">-->
+                <!--<v-progress-circular indeterminate color="primary"></v-progress-circular>-->
+                <!--Loading-->
+            <!--</div>-->
+            <!--<div v-else>-->
+                <!--start of data-->
+            <!--</div>-->
+        <!--</div>-->
+
+        <v-card flat v-for="(activity, index) in activitiesList" :key="index">
+            {{ incCounter() }}
             <v-card-title>
                 <div>
-                    <span class="grey--text">{{ activity.date }}</span><br>
-                    <span class="grey--text">qty: {{ activity.quantity }}</span><br>
-                    <span class="grey--text">cat: {{ activity.categoryName }}</span><br>
-                    <span class="grey--text">typeID: {{ activity.typeId }}</span><br>
-                    <span class="grey--text">ID: {{ activity.id }}</span><br>
-                    <span class="body-2">{{ activity.activityName }}</span><br>
-                    <span class="body-1">{{ activity.description }}</span>
+                    <span class="grey--text">{{activity.date }} - qty: {{ activity.quantity }} - {{ activity.categoryName }}</span><br>
+                    <span class="body-2">{{ activity.activityName }} <span
+                            class="grey--text">(id {{ activity.typeId }})</span></span><br>
+                    <span class="body-1">{{ activity.description }} <span
+                            class="grey--text">(id {{ activity.id }})</span></span>
                 </div>
             </v-card-title>
             <v-card-actions>
@@ -44,14 +53,22 @@
             <v-divider></v-divider>
         </v-card>
 
-        <div id="load-more" class="scroll-watcher">loading more... {{ listCount }}</div>
+        <div id="load-more-bottom">
+            <div v-if="loading">
+                <v-progress-circular indeterminate color="primary"></v-progress-circular>
+                Loading
+            </div>
+            <div v-else>
+                end of data
+            </div>
+        </div>
     </div>
 </template>
 
 
 <script>
     import ScrollMonitor from 'scrollmonitor'
-    import {EventBus} from '../../main';
+    import {EventBus} from '../../main'
     import Overlay from '../Overlay.vue'
     import AddFab from './AddFab.vue'
     import ActivityForm from '../activities/ActivityForm.vue'
@@ -66,7 +83,16 @@
 
         data() {
             return {
-                listCount: 5, // start with 5 on screen
+                // The activities being displayed
+                //activitiesList: [],
+
+                // start and end indices, and number to shift on or off
+                activitiesStartIndex: 0,
+                activitiesEndIndex: 0,
+                activitiesShowCount: 20,
+
+                // Show the loading spinner
+                loading: false,
                 overlay: false,
             }
         },
@@ -75,31 +101,65 @@
             activities() {
                 return this.$store.state.memberActivities
             },
+            activitiesList() {
+                return this.activities.slice(this.activitiesStartIndex, this.activitiesEndIndex)
+            },
+            maxIndex() {
+                return this.activities.length - 1
+            },
             activityTypes() {
                 return this.$store.state.activityTypes
             },
-            displayActivities() {
-                return this.activities.slice(0, this.listCount)
-            }
         },
 
         methods: {
-            loadMore() {
-                this.overlay = true
-                this.listCount += 5
-                this.overlay = false
+
+            // loadMore determines the set of activities that should be displayed on screen. It is like moving window
+            // that keeps the total number of DOM nodes that get renders to a reasonable amount. Otherwise, the
+            // infinite scrolling if lots of activities starts to really slow things down - this is because of the
+            // form component loaded with each activity row.
+            shiftTop() {
+                let newStartIndex = this.activitiesStartIndex - this.activitiesShowCount
+                this.activitiesStartIndex = newStartIndex > 0 ? newStartIndex : 0
+                this.activitiesEndIndex = this.activitiesStartIndex + this.activitiesShowCount
+                console.log(`shiftTop has set [${this.activitiesStartIndex}, ${this.activitiesEndIndex}]`)
+            },
+
+            shiftBottom() {
+                let newEndIndex = this.activitiesEndIndex + this.activitiesShowCount
+                this.activitiesEndIndex = newEndIndex < this.maxIndex ? newEndIndex : this.maxIndex
+                //this.activitiesStartIndex = this.activitiesEndIndex - this.activitiesShowCount
+                console.log(`shiftBottom has set [${this.activitiesStartIndex}, ${this.activitiesEndIndex}]`)
+            },
+
+            incCounter() {
+                console.log("loop - [" + this.activitiesStartIndex + ", " + this.activitiesEndIndex + "]")
             }
+
+
         },
 
         mounted() {
 
-            // load more
-            let elem = document.getElementById('load-more')
-            let watcher = scrollMonitor.create(elem)
-            watcher.enterViewport(() => {
-                this.loadMore()
-            })
+            // watch top and bottom
+            //let elemTop = document.getElementById('load-more-top')
+            //let watcherTop = scrollMonitor.create(elemTop)
+            let elemBottom = document.getElementById('load-more-bottom')
+            let watcherBottom = scrollMonitor.create(elemBottom)
 
+            // Whenever the top is visible need to either append items, until the bottom is off screen,
+            // or prepend items, until the top is offscreen, or we are at the start
+            // watcherTop.enterViewport(() => {
+            //     // console.log("top")
+            //     //     this.shiftTop()
+            // })
+
+            // Whenever the bottom is visible, and there are more items, load them
+            watcherBottom.enterViewport(() => {
+                console.log("bottom")
+                this.loading = true
+                this.shiftBottom()
+            })
 
             // listen for request to update screen, eg after an item is edited
             EventBus.$on('updatedActivity', (activity, index) => {
@@ -128,7 +188,14 @@
     .card__title {
         padding-bottom: 0;
     }
-    .scroll-watcher {
-        background-color: yellow
+
+    #load-more-top {
+        background-color: red;
     }
+
+    #load-more-bottom {
+        background-color: green;
+    }
+
+
 </style>
