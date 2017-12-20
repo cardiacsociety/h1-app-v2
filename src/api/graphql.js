@@ -95,42 +95,4 @@ export default {
         return request(url, mutation, variables)
     }
 
-
-
 }
-
-
-// This will check the users local storage for a reasonably up-to-date version of this list
-// If found it will use that, otherwise, it will fetch a fresh list from the API
-// todo - make it work!
-// export const activityTypes = [
-//   {id: 1, name: "Activity One", description: "Description of activity one"},
-//   {id: 2, name: "Activity Two", description: "Description of activity two"},
-// ]
-
-// api stuff for later (from a Vue component)
-// fetchActivityTypes() {
-//   this.overlay = true
-//   this.$http.get('g/activities')
-//     .then(r => {
-//       r.body.data.forEach(e => {
-//         this.activityTypes.push({
-//           id: e.id,
-//           name: e.name,
-//           unit: e.credit.unitName
-//         })
-//       })
-//       console.log(r)
-//       //this.store()
-//       this.overlay = false
-//     }, r => {
-//       console.log(r)
-//       this.overlay = false
-//     })
-// }
-
-
-
-
-
-
