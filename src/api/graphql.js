@@ -92,8 +92,6 @@ export default {
             memberActivityInput: activityObject,
         }
 
-
-
         return request(url, mutation, variables)
     }
 

@@ -4,8 +4,6 @@ export default {
 
     getActivityTypes() {
 
-        console.log("getActivityTypes()")
-
         let activityTypes = []
         graphql.getActivityTypes()
             .then(data => {
@@ -54,7 +52,12 @@ export default {
 
         console.log(Array.from(memberActivities)[0])
         return memberActivities
-    }
+    },
+
+    setMemberActivity(activity) {
+        return graphql.setMemberActivity(activity)
+    },
+
 }
 
 

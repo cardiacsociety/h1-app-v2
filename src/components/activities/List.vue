@@ -11,6 +11,15 @@
         </app-activity-form>
         <h3>Activity List</h3>
 
+        <!--<div id="loadfirst">-->
+            <!--<div v-if="moreToShow">loading activities...</div>-->
+        <!--</div>-->
+
+        Total: {{ total }}<br>
+        More to show? {{ moreToShow }}<br>
+        Show (max): {{ show }}
+
+
         <!--<div id="load-more-top">-->
             <!--<div v-if="showLoading">-->
                 <!--<v-progress-circular indeterminate color="primary"></v-progress-circular>-->
@@ -21,10 +30,11 @@
             <!--</div>-->
         <!--</div>-->
 
-        <v-card flat v-for="(activity, index) in activitiesList" :key="index">
-            {{ incCounter() }}
+        <v-card flat v-for="(activity, index) in activities.slice(0, show)" :key="index">
+
             <v-card-title>
                 <div>
+                    {{ index }}
                     <span class="grey--text">{{activity.date }} - qty: {{ activity.quantity }} - {{ activity.categoryName }}</span><br>
                     <span class="body-2">{{ activity.activityName }} <span
                             class="grey--text">(id {{ activity.typeId }})</span></span><br>
@@ -34,6 +44,7 @@
             </v-card-title>
             <v-card-actions>
                 <app-activity-form
+                        :index="index"
                         :activityData="{
                           id: activity.id,
                           typeId: activity.typeId,
@@ -50,13 +61,14 @@
                 <!--<v-icon>attachment</v-icon>-->
                 <!--</v-btn>-->
             </v-card-actions>
+
             <v-divider></v-divider>
         </v-card>
 
-        <div id="load-more-bottom">
-            <div v-if="loading">
+        <div id="loadmore">
+            <div v-if="moreToShow">
                 <v-progress-circular indeterminate color="primary"></v-progress-circular>
-                Loading
+                loading
             </div>
             <div v-else>
                 end of data
@@ -83,86 +95,83 @@
 
         data() {
             return {
-                // The activities being displayed
-                //activitiesList: [],
-
-                // start and end indices, and number to shift on or off
-                activitiesStartIndex: 0,
-                activitiesEndIndex: 0,
-                activitiesShowCount: 20,
-
-                // Show the loading spinner
-                loading: false,
+                show: 5,
+                loadMoreCount: 5,
                 overlay: false,
             }
         },
 
         computed: {
+            // all activities
             activities() {
                 return this.$store.state.memberActivities
             },
-            activitiesList() {
-                return this.activities.slice(this.activitiesStartIndex, this.activitiesEndIndex)
+            total() {
+                return this.activities.length
             },
-            maxIndex() {
-                return this.activities.length - 1
+            // listLength() {
+            //   return this.currentListCount + this.loadMoreCount
+            // },
+            addToListCount() {
+              if (this.moreToShow) {
+                  let addToList = this.currentListCount + this.loadMoreCount
+                  return  addToList < this.total ? addToList : this.total
+              }
             },
             activityTypes() {
                 return this.$store.state.activityTypes
             },
+            moreToShow() {
+                if (this.total <= this.show) {
+                    return false
+                }
+                return true
+            }
         },
 
         methods: {
 
-            // loadMore determines the set of activities that should be displayed on screen. It is like moving window
-            // that keeps the total number of DOM nodes that get renders to a reasonable amount. Otherwise, the
-            // infinite scrolling if lots of activities starts to really slow things down - this is because of the
-            // form component loaded with each activity row.
-            shiftTop() {
-                let newStartIndex = this.activitiesStartIndex - this.activitiesShowCount
-                this.activitiesStartIndex = newStartIndex > 0 ? newStartIndex : 0
-                this.activitiesEndIndex = this.activitiesStartIndex + this.activitiesShowCount
-                console.log(`shiftTop has set [${this.activitiesStartIndex}, ${this.activitiesEndIndex}]`)
+            loadMore() {
+                this.show += this.loadMoreCount
             },
-
-            shiftBottom() {
-                let newEndIndex = this.activitiesEndIndex + this.activitiesShowCount
-                this.activitiesEndIndex = newEndIndex < this.maxIndex ? newEndIndex : this.maxIndex
-                //this.activitiesStartIndex = this.activitiesEndIndex - this.activitiesShowCount
-                console.log(`shiftBottom has set [${this.activitiesStartIndex}, ${this.activitiesEndIndex}]`)
-            },
-
-            incCounter() {
-                console.log("loop - [" + this.activitiesStartIndex + ", " + this.activitiesEndIndex + "]")
-            }
-
-
         },
 
         mounted() {
 
-            // watch top and bottom
-            //let elemTop = document.getElementById('load-more-top')
-            //let watcherTop = scrollMonitor.create(elemTop)
-            let elemBottom = document.getElementById('load-more-bottom')
-            let watcherBottom = scrollMonitor.create(elemBottom)
+            // reset show
+            //this.show = this.initialShow
 
-            // Whenever the top is visible need to either append items, until the bottom is off screen,
-            // or prepend items, until the top is offscreen, or we are at the start
-            // watcherTop.enterViewport(() => {
-            //     // console.log("top")
-            //     //     this.shiftTop()
-            // })
+            // This first loop is for when the page first loads and the 'loadmore'
+            // element is in the viewport. .isInViewport is triggered (once) and
+            // .enterViewport is triggered once. If both of these do not load enough activities
+            // to push the 'loadmore' element out of the viewport then .enterViewport cannot be triggered
+            // and no new items are displayed. As a workaround a loop will run until all the items are
+            // displayed, or until the 'loadmore' element is pushed out of the view port.
+            let e = document.getElementById('loadmore')
+            let w = ScrollMonitor.create(e)
+            // for (let i = 0; i < this.total; i++) {
+            //     if (w.isInViewport) {
+            //         this.loadMore()
+            //         console.log("loadmore triggered by 'in viewport' - show " + this.show)
+            //     } else {
+            //         console.log("out of viewport")
+            //         break
+            //     }
+            // }
 
-            // Whenever the bottom is visible, and there are more items, load them
-            watcherBottom.enterViewport(() => {
-                console.log("bottom")
-                this.loading = true
-                this.shiftBottom()
+            w.enterViewport(() => {
+                if (this.show < this.total) {
+                    this.loadMore()
+                    console.log("loadmore triggered by 'enter viewport' - showing max " + this.show + " of " + this.total)
+                } else {
+                    console.log("loadmore triggered by 'enter viewport' - already maxed!")
+                }
             })
 
+
+
             // listen for request to update screen, eg after an item is edited
-            EventBus.$on('updatedActivity', (activity, index) => {
+            EventBus.$on('updatedActivity', (index) => {
                 console.log("Updating the activity at index " + index)
             })
 
@@ -188,14 +197,7 @@
     .card__title {
         padding-bottom: 0;
     }
-
-    #load-more-top {
-        background-color: red;
+    .just-updated {
+        background-color: paleturquoise;
     }
-
-    #load-more-bottom {
-        background-color: green;
-    }
-
-
 </style>

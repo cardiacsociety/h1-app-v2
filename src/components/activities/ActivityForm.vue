@@ -109,7 +109,7 @@
     import {EventBus} from '../../main'
     import moment from 'moment'
     import api from '../../api/mapp'
-    import graphql from '../../api/graphql'
+    import activities from '../../data/activities'
     import Overlay from '../Overlay.vue'
     import DateField from '../form/DateField.vue'
 
@@ -121,6 +121,12 @@
             // activityTypesData: {
             //      type: Array
             // },
+
+            // the index of the item is the form is opened from a list
+            // use to update the list display when the form is submitted
+            index: {
+                type: Number,
+            },
 
             // Option to pass in an activity object to pre-populate
             activityData: {
@@ -289,49 +295,59 @@
             // functions for now - in case we revert.
             saveActivity() {
 
-                // graphql version
-                graphql.setMemberActivity(this.activity)
+                activities.setMemberActivity(this.activity)
                     .then((r) => {
-                        console.log(r)
-                        this.dialog = false // close form
+                        const updatedActivity = r.memberUser.setActivity
+                        this.$store.commit('setMemberActivity', updatedActivity)
                         EventBus.$emit('alert', {text: "Activity updated!"}) // global 'snackbar' alert
-                        EventBus.$emit('updatedActivity') // trigger a forceUpdate() in parent so changes are visible
-                    }, (r) => {
+                        this.dialog = false
+                    })
+                    .catch(() => {
                         console.log(r)
                         this.errorAlert = true // this page error alert
-                        this.errorMessage = r.message
+                        this.errorMessage = "Error saving..."
                     })
-
-                return
-
-                if (this.activity.id) {
-                    console.log("Update activity")
-                    api.updateActivity(this.activity)
-                        .then((r) => {
-                            console.log(r)
-                            this.dialog = false // close form
-                            EventBus.$emit('alert', {text: "Activity updated!"}) // global 'snackbar' alert
-                            EventBus.$emit('updatedActivity') // trigger a forceUpdate() in parent so changes are visible
-                        }, (r) => {
-                            console.log(r)
-                            this.errorAlert = true // this page error alert
-                            this.errorMessage = r.status + " " + r.statusText + " - " + r.body.message
-                        })
-
-                } else {
-                    console.log("Add activity")
-                    api.addActivity(this.activity)
-                        .then((r) => {
-                            console.log(r)
-                            this.dialog = false // close form
-                            EventBus.$emit('alert', {text: "Activity saved!"}) // global 'snackbar' alert
-                            EventBus.$emit('addedActivity', this.activity) // update parent view
-                        }, (r) => {
-                            console.log(r)
-                            this.errorAlert = true // this page error alert
-                            this.errorMessage = r.status + " " + r.statusText + " - " + r.body.message
-                        })
-                }
+                //     .then((r) => {
+                //         console.log(r)
+                //         this.dialog = false // close form
+                //         EventBus.$emit('alert', {text: "Activity updated!"}) // global 'snackbar' alert
+                //         EventBus.$emit('updatedActivity', this.index) // trigger a forceUpdate() in parent so changes are visible
+                //     }, (r) => {
+                //         console.log(r)
+                //         this.errorAlert = true // this page error alert
+                //         this.errorMessage = r.message
+                //     })
+                //
+                // return
+                //
+                // if (this.activity.id) {
+                //     console.log("Update activity")
+                //     api.updateActivity(this.activity)
+                //         .then((r) => {
+                //             console.log(r)
+                //             this.dialog = false // close form
+                //             EventBus.$emit('alert', {text: "Activity updated!"}) // global 'snackbar' alert
+                //             EventBus.$emit('updatedActivity') // trigger a forceUpdate() in parent so changes are visible
+                //         }, (r) => {
+                //             console.log(r)
+                //             this.errorAlert = true // this page error alert
+                //             this.errorMessage = r.status + " " + r.statusText + " - " + r.body.message
+                //         })
+                //
+                // } else {
+                //     console.log("Add activity")
+                //     api.addActivity(this.activity)
+                //         .then((r) => {
+                //             console.log(r)
+                //             this.dialog = false // close form
+                //             EventBus.$emit('alert', {text: "Activity saved!"}) // global 'snackbar' alert
+                //             EventBus.$emit('addedActivity', this.activity) // update parent view
+                //         }, (r) => {
+                //             console.log(r)
+                //             this.errorAlert = true // this page error alert
+                //             this.errorMessage = r.status + " " + r.statusText + " - " + r.body.message
+                //         })
+                // }
             },
 
             // clear form values - note, also clears the date
