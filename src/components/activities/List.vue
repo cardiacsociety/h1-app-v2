@@ -1,13 +1,8 @@
 <template>
     <div>
         <app-overlay v-if="overlay"></app-overlay>
-        <app-activity-form
-                :activityTypesData="activityTypes"
-                :reset="true"
-        >
-            <app-add-fab
-                    slot="activator"
-            ></app-add-fab>
+        <app-activity-form :reset="true">
+            <app-add-fab slot="activator"></app-add-fab>
         </app-activity-form>
         <h3>Activity List</h3>
 
@@ -17,7 +12,6 @@
 
             <v-card-title>
                 <div>
-                    {{ index }}
                     <span class="grey--text">{{activity.date }} - qty: {{ activity.quantity }} - {{ activity.categoryName }}</span><br>
                     <span class="body-2">{{ activity.activityName }} <span
                             class="grey--text">(id {{ activity.typeId }})</span></span><br>
@@ -91,9 +85,6 @@
             total() {
                 return this.activities.length
             },
-            activityTypes() {
-                return this.$store.state.activityTypes
-            },
             moreToShow() {
                 if (this.total <= this.show) {
                     return false
@@ -114,7 +105,6 @@
             w.enterViewport(() => {
                 if (this.show < this.total) {
                     this.loadMore()
-
                 }
             })
         },

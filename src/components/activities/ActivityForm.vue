@@ -108,19 +108,11 @@
 <script>
     import {EventBus} from '../../main'
     import moment from 'moment'
-    import api from '../../api/mapp'
     import activities from '../../data/activities'
-    import Overlay from '../Overlay.vue'
     import DateField from '../form/DateField.vue'
 
     export default {
         props: {
-
-            // Option to pass in the list of activity types. This is useful when rendering this component
-            // // for each item in a list as it is inefficient to make an API call to get the same list, for each item.
-            // activityTypesData: {
-            //      type: Array
-            // },
 
             // the index of the item is the form is opened from a list
             // use to update the list display when the form is submitted
@@ -164,13 +156,9 @@
                     description: "",
                 },
 
-                // array of activity type objects
-                //activityTypes: [],
-
                 lastQuantity: 0,
 
                 // Validation
-                //valid: false,
                 quantityRules: [
                     (v) => !!v && v && v > 0 || "Required > 0"
                 ],
@@ -307,47 +295,6 @@
                         this.errorAlert = true // this page error alert
                         this.errorMessage = "Error saving..."
                     })
-                //     .then((r) => {
-                //         console.log(r)
-                //         this.dialog = false // close form
-                //         EventBus.$emit('alert', {text: "Activity updated!"}) // global 'snackbar' alert
-                //         EventBus.$emit('updatedActivity', this.index) // trigger a forceUpdate() in parent so changes are visible
-                //     }, (r) => {
-                //         console.log(r)
-                //         this.errorAlert = true // this page error alert
-                //         this.errorMessage = r.message
-                //     })
-                //
-                // return
-                //
-                // if (this.activity.id) {
-                //     console.log("Update activity")
-                //     api.updateActivity(this.activity)
-                //         .then((r) => {
-                //             console.log(r)
-                //             this.dialog = false // close form
-                //             EventBus.$emit('alert', {text: "Activity updated!"}) // global 'snackbar' alert
-                //             EventBus.$emit('updatedActivity') // trigger a forceUpdate() in parent so changes are visible
-                //         }, (r) => {
-                //             console.log(r)
-                //             this.errorAlert = true // this page error alert
-                //             this.errorMessage = r.status + " " + r.statusText + " - " + r.body.message
-                //         })
-                //
-                // } else {
-                //     console.log("Add activity")
-                //     api.addActivity(this.activity)
-                //         .then((r) => {
-                //             console.log(r)
-                //             this.dialog = false // close form
-                //             EventBus.$emit('alert', {text: "Activity saved!"}) // global 'snackbar' alert
-                //             EventBus.$emit('addedActivity', this.activity) // update parent view
-                //         }, (r) => {
-                //             console.log(r)
-                //             this.errorAlert = true // this page error alert
-                //             this.errorMessage = r.status + " " + r.statusText + " - " + r.body.message
-                //         })
-                // }
             },
 
             // clear form values - note, also clears the date

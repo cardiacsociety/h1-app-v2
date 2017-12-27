@@ -7,7 +7,9 @@ if (process.env.NODE_ENV === 'production') {
   config.REST_API_BASE_URL = "https://mappcpd-csanz-web-services.herokuapp.com/v1"
   config.GRAPHQL_API_BASE_URL = "https://mappcpd-csanz-graphql.herokuapp.com/graphql"
 } else {
-  config.REST_API_BASE_URL = "http://localhost:5000/v1"
-  config.GRAPHQL_API_BASE_URL = "http://localhost:5001/graphql"
+    //config.REST_API_BASE_URL = "https://mappcpd-csanz-web-services.herokuapp.com/v1"
+    //config.GRAPHQL_API_BASE_URL = "https://mappcpd-csanz-graphql.herokuapp.com/graphql"
+   config.REST_API_BASE_URL = "http://localhost:5000/v1"
+   config.GRAPHQL_API_BASE_URL = "http://localhost:5001/graphql"
 }
 module.exports = config

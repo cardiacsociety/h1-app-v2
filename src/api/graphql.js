@@ -48,11 +48,9 @@ export default {
                         }
                     }`
 
-
         let variables = {
             token: token
         }
-
 
         return request(url, query, variables)
     },
@@ -93,6 +91,29 @@ export default {
         }
 
         return request(url, mutation, variables)
-    }
+    },
+
+    // get member cpd activity progress score, returns an objects with various bits
+    // of information about the member's progress.
+    getMemberActivityProgress() {
+
+        let query = `query MemberUser($token: String!) {
+                        memberUser(token: $token) {
+                        evaluation{
+                          name
+                          startDate
+                          endDate
+                          creditObtained
+                          creditRequired
+                        }
+                      }
+                    }`
+
+        let variables = {
+            token: token
+        }
+
+        return request(url, query, variables)
+    },
 
 }

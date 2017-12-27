@@ -29,10 +29,7 @@ export default {
         let memberActivities = []
         graphql.getMemberActivities()
             .then(data => {
-                console.log(typeof data.memberUser.activities)
-                let activities = Array.from(data.memberUser.activities)
-                console.log(typeof activities)
-                console.log(data)
+                let activities = data.memberUser.activities
                 activities.forEach((v) => {
                     memberActivities.push({
                         id: v.id,
@@ -44,9 +41,11 @@ export default {
                         categoryName: v.category,
                     })
                 })
+                // todo - here is where we can signal busy... use event emitter globally to create the overlay
+                console.log('done')
 
             }, r => {
-                console.log("Error getting member activities for Vuex store:")
+                console.log("Error getting member activities from graphql server:")
                 console.log(r)
             })
 
@@ -57,6 +56,27 @@ export default {
     setMemberActivity(activity) {
         return graphql.setMemberActivity(activity)
     },
+
+    // get some data about the member's progress against CPD requirements
+    getMemberActivityProgress() {
+
+        let progress = {
+            credit: 0,
+            required: 0,
+        }
+
+        graphql.getMemberActivityProgress()
+            .then((data) => {
+                progress.credit = data.memberUser.evaluation.creditObtained
+                progress.required = data.memberUser.evaluation.creditRequired
+            })
+            .catch((r)=>{
+                console.log("Error fetching member activity progress")
+                console.log(r)
+            })
+
+       return progress
+    }
 
 }
 

@@ -1,6 +1,6 @@
 <template>
     <div>
-        <app-activity-form>
+        <app-activity-form :reset="true">
             <app-add-fab slot="activator"></app-add-fab>
         </app-activity-form>
         <h3>Activities Overview</h3>
@@ -10,15 +10,15 @@
                     v-bind:size="120"
                     v-bind:width="15"
                     v-bind:rotate="360"
-                    v-bind:value="progress"
+                    v-bind:value="progressPercentage"
                     color="deep-orange"
             >
-                {{ progress }}%
+                {{ progressPercentage }}%
             </v-progress-circular>
         </div>
         <div>
             <v-list>
-                <app-activity-form>
+                <app-activity-form :reset="true">
                     <app-nav-drawer-link icon="library_add" slot="activator">
                         Add a new activity
                     </app-nav-drawer-link>
@@ -40,21 +40,27 @@
 
     export default {
 
-      components: {
-        appNavDrawerLink: NavDrawerLink,
-        appActivityForm: ActivityForm,
-        appAddFab: AddFab
-      },
+        components: {
+            appNavDrawerLink: NavDrawerLink,
+            appActivityForm: ActivityForm,
+            appAddFab: AddFab
+        },
 
-      data() {
-        return {
-            progress: 55
+        data() {
+            return {}
+        },
+
+        computed: {
+            progressPercentage() {
+                let data = this.$store.state.memberActivityProgress
+                console.log(data)
+                return (data.credit / data.required) * 100
+            }
+        },
+
+        mounted() {
+            this.navEvent('close')
         }
-      },
-
-      mounted() {
-        this.navEvent('close')
-      }
     }
 </script>
 
