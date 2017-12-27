@@ -13,7 +13,7 @@
                     v-bind:value="progressPercentage"
                     color="deep-orange"
             >
-                {{ progressPercentage }}%
+                {{ progressPercentage || 0 }}%
             </v-progress-circular>
         </div>
         <div>
@@ -53,8 +53,8 @@
         computed: {
             progressPercentage() {
                 let data = this.$store.state.memberActivityProgress
-                console.log(data)
-                return (data.credit / data.required) * 100
+                let percentage = Math.round((data.credit / data.required) * 100)
+                return percentage
             }
         },
 
