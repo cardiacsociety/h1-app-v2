@@ -5,13 +5,31 @@
                 :app-id="Config.ALGOLIA_APP_ID"
                 :api-key="Config.ALGOLIA_API_KEY"
                 :index-name="Config.ALGOLIA_RESOURCES_INDEX"
+                :query-parameters="{'page': page, 'snippetEllipsisText': '…'}"
         >
-            <ais-input class="search-input" placeholder="Find resources..."></ais-input>
-            <ais-results>
+            <ais-input class="search-input" placeholder="search for..."></ais-input>
+            <div>
+                <p>
+                    <ais-stats>
+                        <template slot-scope="{ totalResults, processingTime, query }">
+                            There are {{ totalResults }} results matching query: <b>{{ query }}</b>
+                            - <small>{{ processingTime }}ms</small>
+                        </template>
+                    </ais-stats>
+                </p>
+            </div>
+            <ais-results :stack="true">
                 <template slot-scope="{ result }">
                     <div class="resource-row">
                         <span class="subheading resource-title">
                             <ais-highlight :result="result" attribute-name="name"></ais-highlight>
+                        </span><br>
+                        <span class="body-1 ref">
+                            {{ result.sourceNameAbbrev }}
+                            {{ (result.sourcePubDate ? result.sourcePubDate : '') }}
+                            {{ (result.sourceVolume ? '; '+result.sourceVolume : '') }}
+                            {{ (result.sourceIssue ? '('+result.sourceIssue+')' : '') }}
+                            {{ (result.sourcePages ? ': '+result.sourcePages : '') }}
                         </span><br>
                         <span class="caption">
                             <app-resource-description
@@ -37,76 +55,71 @@
                     </div>
                 </template>
             </ais-results>
+
+            <div id="loadmore">
+                <v-progress-circular indeterminate color="primary"></v-progress-circular>
+                loading more
+            </div>
         </ais-index>
     </div>
 </template>
 
 <script>
-  import Config from '../../config'
-  import {EventBus} from '../../main'
-  import api from '../../api/mapp'
+    import Config from '../../config'
+    import ScrollMonitor from 'scrollmonitor'
 
-  import ResourceDescription from './ResourceDescription.vue'
-  import Form from '../activities/ActivityForm.vue'
+    import ResourceDescription from './ResourceDescription.vue'
+    import Form from '../activities/ActivityForm.vue'
 
-  export default {
+    export default {
 
-    components: {
-      appResourceDescription: ResourceDescription,
-      appActivityForm: Form
-    },
+        components: {
+            appResourceDescription: ResourceDescription,
+            appActivityForm: Form
+        },
 
-    data() {
-      return {
-        Config,
-        expand: false,
+        data() {
+            return {
+                Config,
+                expand: false,
+                page: 1,
+            }
+        },
 
-        // list of activity types get passed to form as props. Had as computed
-        // but was then called for every row and was returning empty, sometimes?
-        activityTypes: []
-      }
-    },
+        computed: {
+            activityTypes() {
+                return this.$store.state.activityTypes
+            }
+        },
 
-    methods: {
+        methods: {
 
-      fetchActivityTypes() {
-        api.getActivityTypes()
-          .then(r => {
-            r.body.data.forEach(e => {
-              this.activityTypes.push({
-                id: e.id,
-                name: e.name,
-                unit: e.credit.unitName
-              })
+            openResource(url) {
+                window.open(url)
+            },
+
+            loadMore: function () {
+                this.page++;
+            },
+        },
+
+        mounted() {
+            let e = document.getElementById('loadmore')
+            let w = ScrollMonitor.create(e)
+            w.enterViewport(() => {
+                this.loadMore()
             })
-          }, r => {
-            console.log("Error fetching activity types", r)
-          })
-      },
-
-      openResource(url) {
-        window.open(url)
-      },
-    },
-
-    mounted() {
-      this.$nextTick(() => {
-        this.fetchActivityTypes()
-      })
+        }
     }
-  }
 </script>
 
 <style scoped>
     .search-input {
         margin-bottom: 20px;
+        padding-left: 4px;
         border: solid #ccc 1px;
         border-radius: 5px;
         font-size: 20px;
-    }
-
-    .ais-highlight em {
-        background-color: yellow;
     }
 
     .resource-row {
@@ -120,5 +133,9 @@
     .resource-link {
         text-transform: lowercase;
         margin-left: 0px;
+    }
+    .ref {
+        color: #999;
+        font-style: italic;
     }
 </style>

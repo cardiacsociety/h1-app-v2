@@ -90,4 +90,8 @@
     .lowercase {
         text-transform: lowercase;
     }
+
+    .ais-highlight em {
+        background-color: rgb(255,255,153);
+    }
 </style>
