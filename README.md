@@ -1,6 +1,8 @@
-# h1-app
+# h1-app-v2
 
-HeartOne web app front end in vue.
+Second Prototype HeartOne web app in VueJS
+
+**This will be thrown out soon**
 
 Currently deploying to Heroku as a Go server.
 
